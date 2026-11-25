@@ -236,8 +236,6 @@ const en = {
     outlineGo: "Go to “{p}”",
     outlineAdd: "Add “{p}” to my notes",
     aiNotesLabel: "Notes written by AI from the recording. Check them against the sermon.",
-    summaryLabel: "Summary",
-    inShort: "In short",
     missedHeading: "Points I missed (from the recording, AI)",
   },
   bible: {

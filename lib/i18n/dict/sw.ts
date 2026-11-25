@@ -236,8 +236,6 @@ const sw: Dict = {
     outlineGo: "Nenda kwa “{p}”",
     outlineAdd: "Ongeza “{p}” kwenye maandishi yangu",
     aiNotesLabel: "Maandishi yaliyoandikwa na AI kutoka kwenye rekodi. Yahakiki na mahubiri.",
-    summaryLabel: "Muhtasari",
-    inShort: "Kwa ufupi",
     missedHeading: "Hoja nilizokosa (kutoka kwenye rekodi, AI)",
   },
   bible: { picker: "Tafsiri ya Biblia" },

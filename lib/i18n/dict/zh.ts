@@ -236,8 +236,6 @@ const zh: Dict = {
     outlineGo: "跳到“{p}”",
     outlineAdd: "把“{p}”加入我的笔记",
     aiNotesLabel: "以下笔记由 AI 根据录音整理，请对照讲道核实。",
-    summaryLabel: "小结",
-    inShort: "概要",
     missedHeading: "我错过的要点（来自录音，AI）",
   },
   bible: { picker: "圣经译本" },

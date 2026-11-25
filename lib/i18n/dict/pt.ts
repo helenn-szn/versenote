@@ -236,8 +236,6 @@ const pt: Dict = {
     outlineGo: "Ir para “{p}”",
     outlineAdd: "Adicionar “{p}” às minhas notas",
     aiNotesLabel: "Notas escritas pela IA a partir da gravação. Confira com o sermão.",
-    summaryLabel: "Resumo",
-    inShort: "Em resumo",
     missedHeading: "Pontos que perdi (da gravação, IA)",
   },
   bible: { picker: "Tradução da Bíblia" },

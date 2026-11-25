@@ -236,8 +236,6 @@ const ko: Dict = {
     outlineGo: "“{p}”(으)로 이동",
     outlineAdd: "“{p}”을(를) 노트에 추가",
     aiNotesLabel: "녹음을 바탕으로 AI가 작성한 노트입니다. 설교와 대조해 확인하세요.",
-    summaryLabel: "요약",
-    inShort: "한눈에 보기",
     missedHeading: "놓친 내용 (녹음 기반, AI)",
   },
   bible: { picker: "성경 번역본" },
