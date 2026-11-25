@@ -3,6 +3,8 @@
 **Never miss a word while searching for the Word.**
 A sermon notebook for churches all over the world, built for the AI for Church Hackathon 2026 (Discipleship & Spiritual Growth track).
 
+Built during the hackathon window: every commit in this repository was made between 24 and 25 November 2026, before the 27 November deadline.
+
 Live: https://versenote.vercel.app · For pastors: https://versenote.vercel.app/pastors
 
 ## What it does
@@ -103,6 +105,22 @@ Import the GitHub repo, add the environment variables and deploy. Then add the V
 | `lib/i18n/` | Dictionaries for the 7 languages, language switcher logic, showcase verses |
 | `lib/ai.ts` | AI model choice with automatic fallback when a model is busy or retired |
 | `supabase/migrations`, `supabase/tests` | Schema, row-level security and database privacy tests |
+
+## How AI is used
+
+AI helps with listening and language. It never writes scripture, and every AI feature runs only when the member asks for it.
+
+| Feature | What AI does | Safeguard |
+|---|---|---|
+| Transcript | Turns the recording into text, a minute at a time | Labelled as AI and kept next to the note, so anything added can be checked |
+| Notes from a recording | Works out which part of the sermon belongs to each outline point and writes it as plain notes | Writes only what was preached, with no opinions or summaries of its own. A fully AI-written note says so in its first line |
+| What did I miss? | Compares the note with the transcript and lists the points left out | The member sees each point and picks what to add |
+| Verses in AI notes | Names the passages the preacher mentioned, e.g. "Psalm 23:4" | Names only. The app looks the text up in a real Bible and labels the translation |
+| Translate a note | Makes a copy of the note in another language | The original stays untouched, and verses are fetched again from that language's Bible |
+
+Verse detection while typing is not AI: it is a reference parser (`lib/bible/`) that reads book names and numbers in all seven languages.
+
+The model is Google Gemini through the AI SDK. If a model is busy or retired, the app moves to the next one in a short list (`lib/ai.ts`), so AI features keep working.
 
 ## Responsible AI and privacy
 
