@@ -66,10 +66,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 signedIn={!!user}
                 links={
                   user
-                    ? [
-                        { href: "/pastor", label: t.nav.share },
-                        { href: "/account", label: t.nav.account },
-                      ]
+                    ? [{ href: "/account", label: t.nav.account }]
                     : [
                         { href: "/#how", label: t.nav.how },
                         { href: "/pastors", label: t.nav.pastors },
