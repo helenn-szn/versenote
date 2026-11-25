@@ -216,6 +216,7 @@ const ko: Dict = {
     tbHighlight: "형광펜",
     tbBullets: "글머리 기호 목록",
     tbQuote: "인용",
+    aiNotesLabel: "녹음을 바탕으로 AI가 작성한 노트입니다. 설교와 대조해 확인하세요.",
     missedHeading: "놓친 내용 (녹음 기반, AI)",
   },
   bible: { picker: "성경 번역본" },
@@ -368,6 +369,8 @@ const ko: Dict = {
     illusNote: "설교 일러스트와 VerseNote 로고는 이 프로젝트를 위해 디자인했습니다.",
   },
   rec: {
+    autoNotes: "설교를 바탕으로 노트를 작성하는 중…",
+    recordSermon: "설교 녹음",
     title: "설교 녹음",
     intro: "설교를 녹음하거나 오디오·동영상을 올리세요. AI가 녹취록을 쓰고 놓친 내용을 찾아 드립니다.",
     record: "녹음",

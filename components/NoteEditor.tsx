@@ -15,7 +15,7 @@ import { contentToDoc, docText, type DocNode, type ScriptureAttrs } from "@/lib/
 import { VerseText } from "./ScriptureCard";
 import SermonCover from "./SermonCover";
 import TranslationPicker from "./TranslationPicker";
-import SermonRecorder from "./SermonRecorder";
+import SermonRecorder, { type SermonNotes } from "./SermonRecorder";
 import { ScriptureNode } from "./editor/ScriptureNode";
 import type { TranslationId } from "@/lib/bible/translations";
 import { useI18n } from "@/lib/i18n/client";
@@ -115,6 +115,7 @@ export default function NoteEditor({
   const [lookupInput, setLookupInput] = useState("");
   const [translation, setTranslation] = useState<TranslationId>(defaultTranslation);
 
+  const [recSlot, setRecSlot] = useState<HTMLElement | null>(null);
   const dismissed = useRef(new Set<string>());
   const suggestionRef = useRef<Suggestion | null>(null);
   suggestionRef.current = suggestion;
@@ -334,6 +335,40 @@ export default function NoteEditor({
     [editor, translation, E.missedHeading]
   );
 
+  /** Nothing was written during the sermon: fill the note from the recording (clearly marked as AI). */
+  const addSermonNotes = useCallback(
+    async (notes: SermonNotes) => {
+      if (!editor) return;
+      if (!latest.current.title.trim() && notes.title) setTitle(notes.title);
+      const nodes: DocNode[] = [
+        { type: "paragraph", content: [{ type: "text", text: `✦ ${E.aiNotesLabel}`, marks: [{ type: "highlight" }] }] },
+      ];
+      for (const sec of notes.sections) {
+        nodes.push({ type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: sec.heading }] });
+        nodes.push({
+          type: "bulletList",
+          content: sec.points.map((p) => ({ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: p.text }] }] })),
+        });
+        const refs = [...new Set(sec.points.flatMap((p) => p.refs))].slice(0, 4);
+        for (const r of refs) {
+          const ref = parseReference(r);
+          if (!ref) continue;
+          try {
+            const res = await fetch(`/api/verse?ref=${encodeURIComponent(formatReference(ref))}&t=${translation}`);
+            if (res.ok) {
+              const v = (await res.json()) as Passage;
+              nodes.push({ type: "scripture", attrs: { reference: v.reference, translation: v.translation, verses: v.verses } });
+            }
+          } catch {}
+        }
+      }
+      nodes.push({ type: "paragraph" });
+      editor.chain().setContent({ type: "doc", content: nodes }).focus("end").run();
+      scheduleSave();
+    },
+    [editor, translation, E.aiNotesLabel, scheduleSave]
+  );
+
   async function deleteNote() {
     if (!window.confirm(E.confirmDelete)) return;
     if (timer.current) clearTimeout(timer.current);
@@ -431,6 +466,8 @@ export default function NoteEditor({
           <span className="tb-sep" aria-hidden />
           {tb(E.tbBullets, fmtState?.bullet, () => editor?.chain().focus().toggleBulletList().run(), <ListIcon />)}
           {tb(E.tbQuote, fmtState?.quote, () => editor?.chain().focus().toggleBlockquote().run(), <QuoteIcon />)}
+          <span className="tb-grow" />
+          <div ref={setRecSlot} className="tb-rec" />
         </div>
 
         <div className="note-editor">
@@ -476,7 +513,13 @@ export default function NoteEditor({
         </form>
       </article>
 
-      <SermonRecorder noteId={note.id} notesText={() => (editor ? docText(editor.getJSON() as never) : "")} onAddPoints={addMissedPoints} />
+      <SermonRecorder
+        noteId={note.id}
+        notesText={() => (editor ? docText(editor.getJSON() as never) : "")}
+        onAddPoints={addMissedPoints}
+        onAutoNotes={addSermonNotes}
+        slot={recSlot}
+      />
 
       <hr className="divider" />
       <div className="row" style={{ justifyContent: "space-between" }}>

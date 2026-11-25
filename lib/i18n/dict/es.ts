@@ -216,6 +216,7 @@ const es: Dict = {
     tbHighlight: "Resaltar",
     tbBullets: "Lista con viñetas",
     tbQuote: "Cita",
+    aiNotesLabel: "Notas escritas por IA a partir de la grabación. Revísalas con el sermón.",
     missedHeading: "Puntos que me perdí (de la grabación, IA)",
   },
   bible: { picker: "Traducción de la Biblia" },
@@ -368,6 +369,8 @@ const es: Dict = {
     illusNote: "Las ilustraciones de sermones y el logotipo de VerseNote se diseñaron para este proyecto.",
   },
   rec: {
+    autoNotes: "Escribiendo tus notas a partir del sermón…",
+    recordSermon: "Grabar el sermón",
     title: "Grabación del sermón",
     intro: "Graba el sermón o sube un audio o video. La IA escribe la transcripción y encuentra lo que te perdiste.",
     record: "Grabar",

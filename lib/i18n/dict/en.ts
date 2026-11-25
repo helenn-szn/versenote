@@ -216,6 +216,7 @@ const en = {
     tbHighlight: "Highlight",
     tbBullets: "Bullet list",
     tbQuote: "Quote",
+    aiNotesLabel: "Notes written by AI from the recording. Check them against the sermon.",
     missedHeading: "Points I missed (from the recording, AI)",
   },
   bible: {
@@ -370,6 +371,8 @@ const en = {
     illusNote: "Sermon illustrations and the VerseNote logo were designed for this project.",
   },
   rec: {
+    autoNotes: "Writing your notes from the sermon…",
+    recordSermon: "Record the sermon",
     title: "Sermon recording",
     intro: "Record the sermon or upload audio or video. AI writes the transcript and finds what you missed.",
     record: "Record",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { createClient } from "@/lib/supabase/client";
 import { fileToWavChunks, SermonRecording } from "@/lib/audio";
 import { useI18n } from "@/lib/i18n/client";
@@ -19,6 +20,7 @@ type Rec = {
   created_at: string;
 };
 type Point = { text: string; refs: string[] };
+export type SermonNotes = { title: string; sections: { heading: string; points: Point[] }[] };
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
@@ -26,10 +28,14 @@ export default function SermonRecorder({
   noteId,
   notesText,
   onAddPoints,
+  onAutoNotes,
+  slot,
 }: {
   noteId: string;
   notesText: () => string;
   onAddPoints: (points: Point[]) => Promise<void>;
+  onAutoNotes: (notes: SermonNotes) => Promise<void>;
+  slot: HTMLElement | null; // the note toolbar, so recording is always one tap away
 }) {
   const { locale, t } = useI18n();
   const R = t.rec;
@@ -155,6 +161,7 @@ export default function SermonRecorder({
     await storeFile(id, file, duration);
     await queue.current; // let the last minute finish transcribing
     clearStatus(id);
+    if (liveParts.current.filter(Boolean).join("").trim().length > 40) await maybeAutoNotes(id);
   }
 
   async function storeFile(id: string, file: Blob, duration: number | null) {
@@ -210,6 +217,7 @@ export default function SermonRecorder({
         const text = await transcribePiece(new Blob([file], { type }));
         await saveTranscript(id, text);
         clearStatus(id);
+        if (text.trim().length > 40) await maybeAutoNotes(id);
         return;
       }
       setStatus(id, R.preparing);
@@ -236,7 +244,29 @@ export default function SermonRecorder({
         }
       };
       await Promise.all([worker(), worker()]);
-      await saveTranscript(id, out.filter(Boolean).join("\n\n"));
+      const full = out.filter(Boolean).join("\n\n");
+      await saveTranscript(id, full);
+      clearStatus(id);
+      if (full.trim().length > 40) await maybeAutoNotes(id);
+    } catch (e) {
+      fail(id, (e as Error).message);
+    }
+    clearStatus(id);
+  }
+
+  // ---------- Notes written for an empty note ----------
+  async function maybeAutoNotes(id: string) {
+    if (notesText().trim()) return; // the member already wrote something: offer "What did I miss?" instead
+    setStatus(id, R.autoNotes);
+    try {
+      const res = await fetch("/api/ai/gaps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ noteId, recordingId: id, mode: "notes" }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error === "ai_unavailable" ? R.aiOff : body.error === "no_transcript" ? R.noTranscript : R.aiFail);
+      if ((body.sections as unknown[])?.length && !notesText().trim()) await onAutoNotes(body as SermonNotes);
     } catch (e) {
       fail(id, (e as Error).message);
     }
@@ -291,8 +321,26 @@ export default function SermonRecorder({
     setRecs((rs) => rs.filter((x) => x.id !== r.id));
   }
 
+  const controls = live ? (
+    <div className="rec-inline live" role="status">
+      <span className={`rec-pulse ${live.paused ? "paused" : ""}`} aria-hidden />
+      <span className="rec-time">{clock(live.seconds)}</span>
+      <button type="button" className="tb-btn" onClick={togglePause} aria-label={live.paused ? R.resume : R.pause} title={live.paused ? R.resume : R.pause}>
+        {live.paused ? <PlayIcon /> : <PauseIcon />}
+      </button>
+      <button type="button" className="rec-stop" onClick={stopRecording}>
+        <span className="sq" aria-hidden /> {R.stop}
+      </button>
+    </div>
+  ) : (
+    <button type="button" className="rec-inline rec-start" onClick={startRecording} title={R.recordSermon}>
+      <span className="rec-dot" aria-hidden /> <span>{R.record}</span>
+    </button>
+  );
+
   return (
-    <section className="card rec-card">
+    <section className="card rec-card" id="recordings">
+      {slot && createPortal(controls, slot)}
       <div className="rec-head">
         <div>
           <h2 style={{ margin: 0 }}>{R.title}</h2>
@@ -300,9 +348,11 @@ export default function SermonRecorder({
         </div>
         {!live && (
           <div className="row">
-            <button type="button" className="btn small rec-btn" onClick={startRecording}>
-              <span className="rec-dot" aria-hidden /> {R.record}
-            </button>
+            {!slot && (
+              <button type="button" className="btn small rec-btn" onClick={startRecording}>
+                <span className="rec-dot" aria-hidden /> {R.record}
+              </button>
+            )}
             <label className="btn secondary small">
               {R.upload}
               <input
@@ -320,7 +370,7 @@ export default function SermonRecorder({
         )}
       </div>
 
-      {live && (
+      {live && !slot && (
         <div className="rec-live" role="status">
           <span className={`rec-pulse ${live.paused ? "paused" : ""}`} aria-hidden />
           <strong>{live.paused ? R.paused : R.recording}</strong>
@@ -429,5 +479,22 @@ export default function SermonRecorder({
 
       <p className="notice rec-ai-note">{R.aiNote}</p>
     </section>
+  );
+}
+
+function PauseIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <rect x="6" y="5" width="4" height="14" rx="1" />
+      <rect x="14" y="5" width="4" height="14" rx="1" />
+    </svg>
+  );
+}
+
+function PlayIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+      <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
+    </svg>
   );
 }

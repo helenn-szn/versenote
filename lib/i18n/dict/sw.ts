@@ -216,6 +216,7 @@ const sw: Dict = {
     tbHighlight: "Angazia",
     tbBullets: "Orodha ya vitone",
     tbQuote: "Nukuu",
+    aiNotesLabel: "Maandishi yaliyoandikwa na AI kutoka kwenye rekodi. Yahakiki na mahubiri.",
     missedHeading: "Hoja nilizokosa (kutoka kwenye rekodi, AI)",
   },
   bible: { picker: "Tafsiri ya Biblia" },
@@ -368,6 +369,8 @@ const sw: Dict = {
     illusNote: "Michoro ya mahubiri na nembo ya VerseNote ilibuniwa kwa mradi huu.",
   },
   rec: {
+    autoNotes: "Inaandika maandishi yako kutoka kwenye mahubiri…",
+    recordSermon: "Rekodi mahubiri",
     title: "Rekodi ya mahubiri",
     intro: "Rekodi mahubiri au pakia sauti au video. AI inaandika nakala na kupata ulichokosa.",
     record: "Rekodi",

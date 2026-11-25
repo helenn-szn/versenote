@@ -1024,3 +1024,63 @@ audio.rec-media { background: transparent; height: 40px; }
 .lang-switch.busy { opacity: 0.6; }
 .lang-switch label, .lang-switch { margin-bottom: 0; font-size: inherit; }
 @media (max-width: 560px) { .lang-switch select { max-width: 5.2rem; } }
+
+/* ---------- Recording right in the note toolbar ---------- */
+:root { --header-h: 62px; }
+.toolbar { top: calc(var(--header-h) + 6px); }
+.tb-grow { flex: 1; }
+.tb-rec { display: inline-flex; }
+.rec-inline { display: inline-flex; align-items: center; gap: 0.4rem; height: 34px; border-radius: 999px; font: inherit; font-size: 0.88rem; font-weight: 700; }
+.rec-start { border: 0; padding: 0 0.85rem 0 0.7rem; background: var(--coral-strong); color: var(--on-primary); cursor: pointer; }
+.rec-start:hover { filter: brightness(0.95); }
+.rec-inline.live { padding: 0 0.2rem 0 0.7rem; background: var(--coral-tint); border: 1.5px solid var(--coral); color: var(--ink); }
+.rec-inline.live .tb-btn { min-width: 30px; height: 28px; }
+.rec-stop { display: inline-flex; align-items: center; gap: 0.35rem; height: 28px; padding: 0 0.7rem; border: 0; border-radius: 999px;
+  background: var(--coral-strong); color: var(--on-primary); font: inherit; font-size: 0.85rem; font-weight: 700; cursor: pointer; }
+.rec-stop .sq { width: 9px; height: 9px; border-radius: 2px; background: currentColor; }
+.rec-start .rec-dot { width: 9px; height: 9px; }
+
+/* The note page: shorter cover so the toolbar (and Record) are on screen straight away */
+.note-page .note-cover :is(svg, img) { max-height: 190px; width: 100%; object-fit: cover; }
+.note-page .note-cover { border-radius: 18px; overflow: hidden; max-height: 190px; }
+
+@media (max-width: 560px) {
+  :root { --header-h: 56px; }
+  .header-inner { padding: 0.5rem 0.75rem; gap: 0.4rem; }
+  .logo-word { font-size: 1.05rem; }
+  .nav { gap: 0; font-size: 0.84rem; flex-wrap: nowrap; min-width: 0; }
+  .nav a { padding: 0.4rem 0.45rem; white-space: nowrap; }
+  .icon-btn { width: 36px; height: 36px; }
+  .lang-switch { height: 36px; padding: 0 0.35rem 0 0.45rem; }
+  .lang-switch select { max-width: 2.6rem; font-size: 0.8rem; text-overflow: clip; }
+  .note-page .note-cover, .note-page .note-cover :is(svg, img) { max-height: 110px; }
+  .note-page .note-cover { margin-bottom: 0.6rem; }
+  .toolbar { gap: 0; }
+  .toolbar .tb-btn { min-width: 32px; padding: 0 0.3rem; }
+  .rec-start span:last-child { font-size: 0.85rem; }
+}
+@media (max-width: 380px) { .logo-word { display: none; } }
+
+/* Language switch: the native select sits invisibly on top, so the label can be short on phones */
+.lang-switch { position: relative; }
+.lang-switch select { position: absolute; inset: 0; width: 100%; max-width: none !important; opacity: 0; padding: 0; background: none; cursor: pointer; }
+.lang-name, .lang-code { font-size: 0.88rem; font-weight: 700; white-space: nowrap; }
+.lang-code { display: none; }
+.lang-switch:has(select:focus-visible) { outline: 2px solid var(--coral); outline-offset: 2px; }
+@media (max-width: 560px) {
+  .lang-name { display: none; }
+  .lang-code { display: inline; font-size: 0.8rem; }
+  .toolbar { flex-wrap: nowrap; padding: 0.2rem; }
+  .toolbar .tb-btn { min-width: 28px; padding: 0 0.2rem; }
+  .tb-sep { margin: 0 0.1rem; }
+  .rec-start { padding: 0 0.7rem 0 0.55rem; }
+  .note-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; }
+  .note-meta .input { min-width: 0; font-size: 0.9rem; }
+  .note-title { font-size: 1.45rem; }
+  .lookup-row { display: grid; grid-template-columns: 1fr auto; }
+  .lookup-row > .input { grid-column: 1 / -1; }
+}
+@media (max-width: 560px) {
+  .nav { overflow-x: auto; scrollbar-width: none; }
+  .nav::-webkit-scrollbar { display: none; }
+}

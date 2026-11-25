@@ -216,6 +216,7 @@ const zh: Dict = {
     tbHighlight: "高亮",
     tbBullets: "项目符号列表",
     tbQuote: "引用",
+    aiNotesLabel: "以下笔记由 AI 根据录音整理，请对照讲道核实。",
     missedHeading: "我错过的要点（来自录音，AI）",
   },
   bible: { picker: "圣经译本" },
@@ -368,6 +369,8 @@ const zh: Dict = {
     illusNote: "讲道插图和 VerseNote 标志为本项目专门设计。",
   },
   rec: {
+    autoNotes: "正在根据讲道整理你的笔记…",
+    recordSermon: "录制讲道",
     title: "讲道录音",
     intro: "录下讲道，或上传音频、视频。AI 会写出文字稿，并找出你错过的内容。",
     record: "录音",
