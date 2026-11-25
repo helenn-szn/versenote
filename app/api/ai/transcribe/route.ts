@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateText } from "ai";
 import { createClient } from "@/lib/supabase/server";
-import { AI_MODEL, aiAvailable, LANGUAGE_NAMES } from "@/lib/ai";
+import { aiAvailable, aiModel, isSetupError, LANGUAGE_NAMES } from "@/lib/ai";
 
 export const maxDuration = 60;
 
@@ -23,8 +23,9 @@ export async function POST(request: Request) {
   if (bytes.length > MAX_BYTES) return NextResponse.json({ error: "too_large" }, { status: 413 });
 
   try {
+    const ai = aiModel();
     const { text } = await generateText({
-      model: AI_MODEL,
+      model: ai.model,
       temperature: 0,
       system:
         "You transcribe church sermons. Write down exactly what is said, in the language it is spoken. " +
@@ -47,6 +48,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ text: text.trim() });
   } catch (e) {
     console.error("transcribe failed", e);
+    if (isSetupError(e)) return NextResponse.json({ error: "ai_unavailable" }, { status: 503 });
     return NextResponse.json({ error: "ai_failed" }, { status: 502 });
   }
 }

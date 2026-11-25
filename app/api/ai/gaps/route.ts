@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateText } from "ai";
 import { createClient } from "@/lib/supabase/server";
-import { AI_MODEL, aiAvailable, LANGUAGE_NAMES } from "@/lib/ai";
+import { aiAvailable, aiModel, isSetupError, LANGUAGE_NAMES } from "@/lib/ai";
 import { contentToDoc, docText } from "@/lib/notes/doc";
 import { getLocale } from "@/lib/i18n/server";
 import type { NoteContent } from "@/lib/types";
@@ -37,8 +37,9 @@ export async function POST(request: Request) {
   const lang = LANGUAGE_NAMES[await getLocale()] ?? "English";
 
   try {
+    const ai = aiModel();
     const { text } = await generateText({
-      model: AI_MODEL,
+      model: ai.model,
       temperature: 0.2,
       system:
         "You help a church member complete their sermon notes. Compare the member's notes with the sermon transcript. " +
@@ -55,10 +56,11 @@ export async function POST(request: Request) {
       .slice(0, 8)
       .map((p) => ({ text: p.text.trim().slice(0, 600), refs: (Array.isArray(p.refs) ? p.refs : []).filter((r) => typeof r === "string").slice(0, 3) }));
 
-    await supabase.from("note_ai_outputs").insert({ note_id: note.id, kind: "gaps", content: JSON.stringify(points), model: AI_MODEL });
+    await supabase.from("note_ai_outputs").insert({ note_id: note.id, kind: "gaps", content: JSON.stringify(points), model: ai.name });
     return NextResponse.json({ points });
   } catch (e) {
     console.error("gaps failed", e);
+    if (isSetupError(e)) return NextResponse.json({ error: "ai_unavailable" }, { status: 503 });
     return NextResponse.json({ error: "ai_failed" }, { status: 502 });
   }
 }
