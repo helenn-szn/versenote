@@ -19,8 +19,9 @@ type Rec = {
   transcript: string | null;
   created_at: string;
 };
-type Point = { text: string; refs: string[] };
-export type SermonNotes = { title: string; sections: { heading: string; points: Point[] }[] };
+export type Point = { text: string; refs: string[]; section?: string };
+export type SermonNotes = { title: string; summary?: string; sections: { heading: string; summary?: string; points: Point[] }[] };
+export type Summaries = { summaries?: Record<string, string>; summary?: string };
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
@@ -37,7 +38,7 @@ export default function SermonRecorder({
   notesText: () => string;
   isBlank: () => boolean; // nothing written yet, apart from outline headings
   outline: () => string[]; // the sermon's points, used as section headings
-  onAddPoints: (points: Point[]) => Promise<void>;
+  onAddPoints: (points: Point[], extra?: Summaries) => Promise<void>;
   onAutoNotes: (notes: SermonNotes) => Promise<void>;
   slot: HTMLElement | null; // the note toolbar, so recording is always one tap away
 }) {
@@ -51,7 +52,7 @@ export default function SermonRecorder({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [top, setTop] = useState("");
   const [urls, setUrls] = useState<Record<string, string>>({});
-  const [points, setPoints] = useState<Record<string, { list: Point[]; picked: boolean[] }>>({});
+  const [points, setPoints] = useState<Record<string, { list: Point[]; picked: boolean[]; extra?: Summaries }>>({});
   const recorder = useRef<SermonRecording | null>(null);
   const localFiles = useRef(new Map<string, Blob>());
   const wake = useRef<{ release: () => Promise<void> } | null>(null);
@@ -258,19 +259,27 @@ export default function SermonRecorder({
     clearStatus(id);
   }
 
-  // ---------- Notes written for an empty note ----------
+  // ---------- After a recording: notes written for you, sorted under the outline ----------
   async function maybeAutoNotes(id: string) {
-    if (!isBlank()) return; // the member already wrote something: offer "What did I miss?" instead
-    setStatus(id, R.autoNotes);
+    const blank = isBlank();
+    const sections = outline();
+    // Already writing and no outline to sort by: offer "What did I miss?" instead.
+    if (!blank && !sections.length) return;
+    setStatus(id, blank ? R.autoNotes : R.autoSort);
     try {
       const res = await fetch("/api/ai/gaps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ noteId, recordingId: id, mode: "notes", outline: outline() }),
+        body: JSON.stringify(blank ? { noteId, recordingId: id, mode: "notes", outline: sections } : { noteId, recordingId: id, outline: sections }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error === "ai_unavailable" ? R.aiOff : body.error === "no_transcript" ? R.noTranscript : R.aiFail);
-      if ((body.sections as unknown[])?.length && isBlank()) await onAutoNotes(body as SermonNotes);
+      if (blank) {
+        if ((body.sections as unknown[])?.length && isBlank()) await onAutoNotes(body as SermonNotes);
+      } else if ((body.points as Point[])?.length || Object.keys(body.summaries ?? {}).length) {
+        // Each point goes straight under the outline point it belongs to, with a summary and the verses that were mentioned.
+        await onAddPoints((body.points as Point[]) ?? [], { summaries: body.summaries, summary: body.summary });
+      }
     } catch (e) {
       fail(id, (e as Error).message);
     }
@@ -286,12 +295,12 @@ export default function SermonRecorder({
       const res = await fetch("/api/ai/gaps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ noteId, recordingId: id }),
+        body: JSON.stringify({ noteId, recordingId: id, outline: outline() }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error === "ai_unavailable" ? R.aiOff : body.error === "no_transcript" ? R.noTranscript : R.aiFail);
       const list = (body.points as Point[]) ?? [];
-      setPoints((p) => ({ ...p, [id]: { list, picked: list.map(() => true) } }));
+      setPoints((p) => ({ ...p, [id]: { list, picked: list.map(() => true), extra: { summaries: body.summaries, summary: body.summary } } }));
     } catch (e) {
       fail(id, (e as Error).message);
     }
@@ -303,7 +312,7 @@ export default function SermonRecorder({
     if (!p) return;
     const chosen = p.list.filter((_, i) => p.picked[i]);
     setStatus(id, R.adding);
-    await onAddPoints(chosen);
+    await onAddPoints(chosen, p.extra);
     clearStatus(id);
     setPoints((x) => {
       const n = { ...x };

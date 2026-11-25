@@ -236,6 +236,8 @@ const en = {
     outlineGo: "Go to “{p}”",
     outlineAdd: "Add “{p}” to my notes",
     aiNotesLabel: "Notes written by AI from the recording. Check them against the sermon.",
+    summaryLabel: "Summary",
+    inShort: "In short",
     missedHeading: "Points I missed (from the recording, AI)",
   },
   bible: {
@@ -395,6 +397,7 @@ const en = {
   },
   rec: {
     autoNotes: "Writing your notes from the sermon…",
+    autoSort: "Placing the sermon under each outline point…",
     recordSermon: "Record the sermon",
     title: "Sermon recording",
     intro: "Record the sermon or upload audio or video. AI writes the transcript and finds what you missed.",

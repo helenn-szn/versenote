@@ -156,6 +156,7 @@ export default function NoteEditor({
   // ---------- Autosave ----------
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latest = useRef({ title, preacher, date });
+  const outlinePointsRef = useRef<string[]>([]);
   latest.current = { title, preacher, date };
   const editorRef = useRef<Editor | null>(null);
 
@@ -350,33 +351,159 @@ export default function NoteEditor({
     if (editor) insertScripture(editor, { reference: s.reference, translation: s.translation, verses: sharedVerses(s) });
   }
 
-  /** Points the AI found in the recording that aren't in the notes. Marked so they're clearly not the member's own words. */
-  const addMissedPoints = useCallback(
-    async (points: { text: string; refs: string[] }[]) => {
-      if (!editor || !points.length) return;
-      const nodes: DocNode[] = [{ type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: E.missedHeading }] }];
-      for (const p of points) {
-        nodes.push({ type: "paragraph", content: [{ type: "text", text: `✦ ${p.text}`, marks: [{ type: "highlight" }] }] });
-        for (const r of p.refs.slice(0, 3)) {
-          const ref = parseReference(r);
-          if (!ref) continue;
-          try {
-            const res = await fetch(`/api/verse?ref=${encodeURIComponent(formatReference(ref))}&t=${translation}`);
-            if (res.ok) {
-              const v = (await res.json()) as Passage;
-              nodes.push({ type: "scripture", attrs: { reference: v.reference, translation: v.translation, verses: v.verses } });
-            }
-          } catch {}
-        }
+  /** Looks a verse up in the member's Bible (the AI only names references; it never writes scripture). */
+  const fetchVerseNode = useCallback(
+    async (r: string): Promise<DocNode | null> => {
+      const ref = parseReference(r);
+      if (!ref) return null;
+      try {
+        const res = await fetch(`/api/verse?ref=${encodeURIComponent(formatReference(ref))}&t=${translation}`);
+        if (!res.ok) return null;
+        const v = (await res.json()) as Passage;
+        return { type: "scripture", attrs: { reference: v.reference, translation: v.translation, verses: v.verses } };
+      } catch {
+        return null;
       }
-      nodes.push({ type: "paragraph" });
-      editor.chain().focus("end").insertContent(nodes).run();
     },
-    [editor, translation, E.missedHeading]
+    [translation]
   );
 
+  const aiLine = (label: string, text: string): DocNode => ({
+    type: "paragraph",
+    content: [
+      { type: "text", text: `✦ ${label}: `, marks: [{ type: "bold" }, { type: "highlight" }] },
+      { type: "text", text, marks: [{ type: "italic" }, { type: "highlight" }] },
+    ],
+  });
+
+  /** AI points as a bulleted list, each with the verses mentioned there (skipping verses already in the note). */
+  const pointsList = useCallback(
+    async (points: { text: string; refs: string[] }[], seen: Set<string>): Promise<DocNode | null> => {
+      const items: DocNode[] = [];
+      for (const p of points) {
+        const item: DocNode = { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: `✦ ${p.text}`, marks: [{ type: "highlight" }] }] }] };
+        for (const r of p.refs.slice(0, 3)) {
+          const card = await fetchVerseNode(r);
+          const key = String(card?.attrs?.reference ?? "").toLowerCase();
+          if (!card || seen.has(key)) continue;
+          seen.add(key);
+          item.content!.push(card);
+        }
+        items.push(item);
+      }
+      return items.length ? { type: "bulletList", content: items } : null;
+    },
+    [fetchVerseNode]
+  );
+
+  /**
+   * What the AI took from the recording, filed into the note: each point and a short summary go under
+   * the outline point they belong to (the heading is added, in the pastor's order, if it isn't there yet).
+   */
+  const addMissedPoints = useCallback(
+    async (points: { text: string; refs: string[]; section?: string }[], extra?: { summaries?: Record<string, string>; summary?: string }) => {
+      if (!editor) return;
+      const lc = (s: string) => s.trim().toLowerCase();
+      const seen = new Set<string>();
+      editor.state.doc.descendants((n) => {
+        if (n.type.name === "scripture") seen.add(String(n.attrs.reference).toLowerCase());
+      });
+
+      // Sections in the order of the note's headings, then the pastor's outline.
+      const order: string[] = [];
+      editor.state.doc.forEach((n) => {
+        if (n.type.name === "heading" && n.textContent.trim()) order.push(n.textContent.trim());
+      });
+      for (const o of outlinePointsRef.current) if (!order.some((x) => lc(x) === lc(o))) order.push(o);
+      const names = new Map<string, string>();
+      for (const k of [...Object.keys(extra?.summaries ?? {}), ...points.map((p) => p.section ?? "").filter(Boolean)]) if (!names.has(lc(k))) names.set(lc(k), k);
+      const rank = (k: string) => {
+        const i = order.findIndex((x) => lc(x) === k);
+        return i < 0 ? 999 : i;
+      };
+      const keys = [...names.keys()].sort((a, b) => rank(a) - rank(b));
+
+      const hasAiLine = (from: number, to: number, label: string) => {
+        let found = false;
+        editor.state.doc.nodesBetween(from, to, (n) => {
+          if (n.type.name === "paragraph" && n.textContent.startsWith(`✦ ${label}:`)) found = true;
+        });
+        return found;
+      };
+
+      for (const key of keys) {
+        const name = names.get(key)!;
+        const summary = Object.entries(extra?.summaries ?? {}).find(([k]) => lc(k) === key)?.[1];
+        const list = await pointsList(points.filter((p) => p.section && lc(p.section) === key), seen);
+
+        const doc = editor.state.doc;
+        let head = -1;
+        let level = 2;
+        doc.forEach((n, pos) => {
+          if (head < 0 && n.type.name === "heading" && lc(n.textContent) === key) {
+            head = pos;
+            level = n.attrs.level as number;
+          }
+        });
+
+        if (head >= 0) {
+          // End of this section = the next heading at the same or a higher level.
+          const start = head + doc.nodeAt(head)!.nodeSize;
+          let stop = doc.content.size;
+          doc.forEach((n, pos) => {
+            if (stop === doc.content.size && pos >= start && n.type.name === "heading" && (n.attrs.level as number) <= level) stop = pos;
+          });
+          // The summary sits right under the heading…
+          if (summary && !hasAiLine(start, stop, E.summaryLabel)) {
+            const size = editor.state.doc.content.size;
+            editor.chain().insertContentAt(start, aiLine(E.summaryLabel, summary)).run();
+            stop += editor.state.doc.content.size - size;
+          }
+          // …and the points go after what the member already wrote, replacing an empty last line.
+          if (list) {
+            const before = editor.state.doc.resolve(stop).nodeBefore;
+            if (before && before.type.name === "paragraph" && !before.textContent.trim())
+              editor.chain().insertContentAt({ from: stop - before.nodeSize, to: stop }, [list, { type: "paragraph" }]).run();
+            else editor.chain().insertContentAt(stop, list).run();
+          }
+        } else {
+          // Not in the note yet: add the heading before the next outline point that is, or at the end.
+          const idx = outlinePointsRef.current.findIndex((p) => lc(p) === key);
+          const later = new Set(idx >= 0 ? outlinePointsRef.current.slice(idx + 1).map(lc) : []);
+          let at = -1;
+          doc.forEach((n, pos) => {
+            if (at < 0 && n.type.name === "heading" && later.has(lc(n.textContent))) at = pos;
+          });
+          const block: DocNode[] = [{ type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: name }] }];
+          if (summary) block.push(aiLine(E.summaryLabel, summary));
+          if (list) block.push(list);
+          if (at >= 0) editor.chain().insertContentAt(at, block).run();
+          else {
+            const last = doc.lastChild;
+            const end = last && last.type.name === "paragraph" && !last.textContent.trim() ? doc.content.size - last.nodeSize : doc.content.size;
+            editor.chain().insertContentAt({ from: end, to: doc.content.size }, [...block, { type: "paragraph" }]).run();
+          }
+        }
+      }
+
+      // Points that fit no outline point keep their own heading at the end.
+      const loose = points.filter((p) => !p.section);
+      if (loose.length) {
+        const list = await pointsList(loose, seen);
+        if (list) editor.chain().focus("end").insertContent([{ type: "heading", attrs: { level: 3 }, content: [{ type: "text", text: E.missedHeading }] }, list, { type: "paragraph" }]).run();
+      }
+
+      // The whole sermon in a few lines, at the top.
+      if (extra?.summary && !hasAiLine(0, editor.state.doc.content.size, E.inShort)) editor.chain().insertContentAt(0, aiLine(E.inShort, extra.summary)).run();
+      scheduleSave();
+    },
+    [editor, pointsList, scheduleSave, E.missedHeading, E.summaryLabel, E.inShort]
+  );
+
+  if (typeof window !== "undefined") (window as unknown as Record<string, unknown>).__vnAdd = addMissedPoints; // DEVTEMP
   // ---------- Following the pastor's outline ----------
   const outlinePoints = parseOutline(sermon?.outline);
+  outlinePointsRef.current = outlinePoints;
   const headingsInNote = (): string[] => {
     const out: string[] = [];
     editor?.state.doc.forEach((n) => {
@@ -446,42 +573,21 @@ export default function NoteEditor({
       const nodes: DocNode[] = [
         { type: "paragraph", content: [{ type: "text", text: `✦ ${E.aiNotesLabel}`, marks: [{ type: "highlight" }] }] },
       ];
-      const fetchVerse = async (r: string): Promise<DocNode | null> => {
-        const ref = parseReference(r);
-        if (!ref) return null;
-        try {
-          const res = await fetch(`/api/verse?ref=${encodeURIComponent(formatReference(ref))}&t=${translation}`);
-          if (!res.ok) return null;
-          const v = (await res.json()) as Passage;
-          return { type: "scripture", attrs: { reference: v.reference, translation: v.translation, verses: v.verses } };
-        } catch {
-          return null;
-        }
-      };
+      if (notes.summary) nodes.push(aiLine(E.inShort, notes.summary));
       const seen = new Set<string>();
       for (const sec of notes.sections) {
         nodes.push({ type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: sec.heading }] });
-        const items: DocNode[] = [];
-        for (const p of sec.points) {
-          const item: DocNode = { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: p.text }] }] };
-          // Each verse the preacher mentioned sits under the point where it came up (once per note).
-          for (const r of p.refs.slice(0, 3)) {
-            const key = r.toLowerCase().replace(/\s+/g, "");
-            if (seen.has(key)) continue;
-            seen.add(key);
-            const card = await fetchVerse(r);
-            if (card) item.content!.push(card);
-          }
-          items.push(item);
-        }
-        if (items.length) nodes.push({ type: "bulletList", content: items });
-        else nodes.push({ type: "paragraph" });
+        if (sec.summary) nodes.push(aiLine(E.summaryLabel, sec.summary));
+        // Each verse the preacher mentioned sits under the point where it came up (once per note).
+        const list = await pointsList(sec.points, seen);
+        if (list) nodes.push(list);
+        else if (!sec.summary) nodes.push({ type: "paragraph" });
       }
       nodes.push({ type: "paragraph" });
       editor.chain().setContent({ type: "doc", content: nodes }).focus("end").run();
       scheduleSave();
     },
-    [editor, translation, E.aiNotesLabel, scheduleSave]
+    [editor, pointsList, E.aiNotesLabel, E.inShort, E.summaryLabel, scheduleSave]
   );
 
   async function deleteNote() {

@@ -236,6 +236,8 @@ const sw: Dict = {
     outlineGo: "Nenda kwa “{p}”",
     outlineAdd: "Ongeza “{p}” kwenye maandishi yangu",
     aiNotesLabel: "Maandishi yaliyoandikwa na AI kutoka kwenye rekodi. Yahakiki na mahubiri.",
+    summaryLabel: "Muhtasari",
+    inShort: "Kwa ufupi",
     missedHeading: "Hoja nilizokosa (kutoka kwenye rekodi, AI)",
   },
   bible: { picker: "Tafsiri ya Biblia" },
@@ -393,6 +395,7 @@ const sw: Dict = {
   },
   rec: {
     autoNotes: "Inaandika maandishi yako kutoka kwenye mahubiri…",
+    autoSort: "Inapanga mahubiri chini ya kila hoja ya muhtasari…",
     recordSermon: "Rekodi mahubiri",
     title: "Rekodi ya mahubiri",
     intro: "Rekodi mahubiri au pakia sauti au video. AI inaandika nakala na kupata ulichokosa.",

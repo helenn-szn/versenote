@@ -236,6 +236,8 @@ const zh: Dict = {
     outlineGo: "跳到“{p}”",
     outlineAdd: "把“{p}”加入我的笔记",
     aiNotesLabel: "以下笔记由 AI 根据录音整理，请对照讲道核实。",
+    summaryLabel: "小结",
+    inShort: "概要",
     missedHeading: "我错过的要点（来自录音，AI）",
   },
   bible: { picker: "圣经译本" },
@@ -393,6 +395,7 @@ const zh: Dict = {
   },
   rec: {
     autoNotes: "正在根据讲道整理你的笔记…",
+    autoSort: "正在把讲道内容放到大纲的各个要点下…",
     recordSermon: "录制讲道",
     title: "讲道录音",
     intro: "录下讲道，或上传音频、视频。AI 会写出文字稿，并找出你错过的内容。",

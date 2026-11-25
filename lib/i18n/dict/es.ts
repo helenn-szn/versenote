@@ -236,6 +236,8 @@ const es: Dict = {
     outlineGo: "Ir a «{p}»",
     outlineAdd: "Añadir «{p}» a mis notas",
     aiNotesLabel: "Notas escritas por IA a partir de la grabación. Revísalas con el sermón.",
+    summaryLabel: "Resumen",
+    inShort: "En resumen",
     missedHeading: "Puntos que me perdí (de la grabación, IA)",
   },
   bible: { picker: "Traducción de la Biblia" },
@@ -393,6 +395,7 @@ const es: Dict = {
   },
   rec: {
     autoNotes: "Escribiendo tus notas a partir del sermón…",
+    autoSort: "Colocando el sermón bajo cada punto del bosquejo…",
     recordSermon: "Grabar el sermón",
     title: "Grabación del sermón",
     intro: "Graba el sermón o sube un audio o video. La IA escribe la transcripción y encuentra lo que te perdiste.",
