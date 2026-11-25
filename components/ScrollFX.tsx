@@ -17,6 +17,8 @@ const TARGETS = [
   ".landing .nb-phone",
   ".landing .world-head > *",
   ".landing .cta-panel",
+  ".landing .pp-step",
+  ".landing .pp-inbox",
   ".sky-footer .sf-grid2 > *",
 ].join(",");
 

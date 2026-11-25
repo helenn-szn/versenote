@@ -53,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               ) : (
                 <>
                   <Link href="/#how" className="hide-sm">{t.nav.how}</Link>
-                  <Link href="/#pastors" className="hide-sm">{t.nav.pastors}</Link>
+                  <Link href="/pastors" className="hide-sm">{t.nav.pastors}</Link>
                   <Link href="/login">{t.nav.signIn}</Link>
                 </>
               )}

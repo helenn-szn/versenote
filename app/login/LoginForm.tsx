@@ -38,6 +38,15 @@ export default function LoginForm() {
     setMode(m);
     setError(null);
     setSent(false);
+    // The page around the form looks different for sign-up, so keep the address in step.
+    if (m !== "link") {
+      const q = new URLSearchParams(window.location.search);
+      if (m === "signup") q.set("mode", "signup");
+      else q.delete("mode");
+      if (email.trim()) q.set("email", email.trim());
+      const qs = q.toString();
+      router.replace(`/login${qs ? `?${qs}` : ""}`, { scroll: false });
+    }
   }
 
   async function submit(e: React.FormEvent) {

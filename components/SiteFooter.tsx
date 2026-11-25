@@ -65,7 +65,7 @@ export default async function SiteFooter({ compact = false }: { compact?: boolea
             <div>
               <h4>{f.explore}</h4>
               <Link href="/#how">{f.how}</Link>
-              <Link href="/#pastors">{f.pastors}</Link>
+              <Link href="/pastors">{f.pastors}</Link>
               <Link href="/#trust">{f.promises}</Link>
             </div>
             <div>

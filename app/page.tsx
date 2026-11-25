@@ -82,7 +82,7 @@ export default async function Home() {
             <Link href="/login?mode=signup" className="btn lg">
               {L.start}
             </Link>
-            <Link href="/login?next=/pastor" className="btn secondary lg">
+            <Link href="/pastors" className="btn secondary lg">
               {L.pastor}
             </Link>
           </div>
@@ -228,9 +228,14 @@ export default async function Home() {
               <i aria-hidden />
               <span><b>3</b> {L.flow3}</span>
             </div>
-            <Link href="/login?next=/pastor" className="btn brown">
-              Share a sermon
-            </Link>
+            <div className="row">
+              <Link href="/pastor" className="btn brown">
+                {L.share}
+              </Link>
+              <Link href="/pastors" className="btn secondary">
+                {t.pastorsPage.how}
+              </Link>
+            </div>
           </div>
           <div className="pastor-visual">
             <Photo photo={PHOTOS.homily} width={1000} />

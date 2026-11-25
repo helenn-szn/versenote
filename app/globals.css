@@ -1197,3 +1197,99 @@ body { overflow-x: clip; }
   .q-btn { width: 48px; height: 48px; }
   .rec-start { width: 52px; height: 52px; }
 }
+
+/* =====================================================================
+   Pastors landing page
+   ===================================================================== */
+.pp-hero { padding: 4rem 0 4.5rem !important; background:
+  radial-gradient(60% 70% at 85% 20%, rgba(212, 73, 47, 0.12), transparent 70%),
+  radial-gradient(50% 60% at 10% 90%, rgba(140, 106, 80, 0.12), transparent 70%); }
+.pp-hero h1 { font-size: clamp(2.3rem, 5.2vw, 4rem); line-height: 1.02; letter-spacing: -0.05em; margin-bottom: 1.1rem; }
+.pp-hero h1 em { font-style: normal; color: var(--coral); }
+.pp-hero .lead { max-width: 34rem; margin-bottom: 1.8rem; }
+.pp-head { max-width: 40rem; margin-bottom: 2.5rem; }
+.pp-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.25rem; }
+.pp-step { position: relative; background: var(--surface); border: 1px solid var(--line); border-radius: 26px; padding: 1.1rem 1.25rem 1.5rem; }
+.pp-step h3 { font-size: 1.2rem; margin: 0.2rem 0 0.4rem; }
+.pp-step p { color: var(--muted); margin: 0; }
+.pp-num { display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--coral-strong); color: var(--on-primary);
+  font-weight: 800; margin-top: 1rem; }
+.pp-mock { height: 168px; border-radius: 18px; background: var(--surface-2); padding: 0.8rem; display: grid; gap: 0.5rem; align-content: start; overflow: hidden;
+  mask-image: linear-gradient(180deg, #000 75%, transparent); -webkit-mask-image: linear-gradient(180deg, #000 75%, transparent); }
+.pp-ref { background: var(--surface); border-left: 3px solid var(--coral); border-radius: 10px; padding: 0.45rem 0.6rem; font-size: 0.78rem; line-height: 1.35; }
+.pp-ref strong { display: block; font-size: 0.8rem; }
+.pp-ref span { color: var(--muted); display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+.pp-mock-qr { display: flex; align-items: center; justify-content: center; gap: 1rem; mask-image: none; -webkit-mask-image: none; }
+.pp-qr { width: 104px; height: 104px; padding: 0.55rem; background: #fff; border-radius: 16px; box-shadow: var(--shadow); }
+.pp-qr svg { width: 100%; height: 100%; display: block; }
+.pp-mock-qr strong { display: block; }
+.pp-q { background: var(--surface); border-radius: 14px; padding: 0.6rem 0.7rem; font-size: 0.82rem; font-weight: 600; display: grid; gap: 0.3rem; justify-items: start; }
+.pp-give { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; margin-top: 0.5rem; }
+.pp-give .nb-feat h3 { color: #fff; }
+.pp-inbox { background: var(--surface); border: 1px solid var(--line); border-radius: 28px; padding: 1.1rem; box-shadow: var(--shadow); max-width: 30rem; justify-self: center; width: 100%; }
+.pp-inbox-head { display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; padding: 0.2rem 0.3rem 0.8rem; border-bottom: 1px solid var(--line); }
+.pp-inbox-q { padding: 0.85rem 0.3rem; border-bottom: 1px solid var(--line); }
+.pp-inbox-q:last-child { border-bottom: 0; padding-bottom: 0.3rem; }
+.pp-inbox-q p { margin: 0.2rem 0 0; font-weight: 700; }
+.pp-answer { margin-top: 0.7rem; border: 1.5px solid var(--coral); border-radius: 14px; padding: 0.6rem 0.75rem; display: flex; justify-content: space-between; gap: 0.75rem;
+  color: var(--muted); font-size: 0.88rem; flex-wrap: wrap; }
+.pp-publish { color: var(--coral-text); font-weight: 700; }
+.pp-see { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; max-width: 56rem; }
+@media (max-width: 900px) {
+  .pp-steps { grid-template-columns: 1fr; }
+  .pp-give { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 560px) {
+  .pp-hero { padding-top: 2rem !important; }
+  .pp-give, .pp-see { grid-template-columns: 1fr; }
+}
+
+/* =====================================================================
+   Sign-up: its own look. Warm brown panel on the left, a collage of
+   churches around the world, and what you get; the form sits on the right.
+   ===================================================================== */
+.auth-page.signup .auth-grid { grid-template-columns: 1.05fr 1fr; }
+.auth-page.signup .su-visual { order: -1; }
+.auth-page.signup .auth-left { flex-direction: column; gap: 1rem; background:
+  radial-gradient(60% 50% at 80% 10%, rgba(212, 73, 47, 0.1), transparent 70%); }
+.su-tag { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.35rem 0.8rem; border-radius: 999px; background: var(--coral-tint);
+  color: var(--coral-text); font-weight: 800; font-size: 0.82rem; }
+.auth-page.signup .auth-card h1 { color: var(--ink); }
+.su-visual { position: relative; margin: 1rem 0 1rem 1rem; border-radius: 32px; overflow: hidden; background: var(--brown-dark); color: #fff;
+  display: grid; grid-template-rows: 1fr auto; padding: 2.5rem 2.5rem 2.75rem; min-height: 0; }
+.su-visual::before { content: ""; position: absolute; inset: 0; background:
+  radial-gradient(55% 45% at 85% 15%, rgba(246, 180, 165, 0.35), transparent 70%),
+  radial-gradient(50% 40% at 10% 90%, rgba(212, 73, 47, 0.35), transparent 70%); }
+.su-collage { position: relative; min-height: 260px; }
+.su-ph { position: absolute; border-radius: 22px; overflow: hidden; border: 5px solid rgba(255, 255, 255, 0.95); box-shadow: 0 20px 40px -18px rgba(0, 0, 0, 0.55); }
+.su-ph .photo { width: 100%; height: 100%; border-radius: 0; }
+.su-ph.a { width: 46%; aspect-ratio: 4 / 5; left: 2%; top: 4%; transform: rotate(-6deg); }
+.su-ph.b { width: 42%; aspect-ratio: 1; left: 34%; top: 22%; transform: rotate(4deg); z-index: 2; }
+.su-ph.c { width: 36%; aspect-ratio: 4 / 5; right: 2%; top: 0; transform: rotate(9deg); }
+.fx .su-ph { animation: float 8s ease-in-out infinite; }
+.su-ph.b { animation-delay: -2.5s !important; }
+.su-ph.c { animation-delay: -5s !important; }
+.su-copy { position: relative; z-index: 3; }
+.su-copy h2 { color: #fff; font-size: clamp(1.9rem, 3.2vw, 2.7rem); letter-spacing: -0.045em; line-height: 1.04; margin: 1rem 0 0.5rem; }
+.su-copy > p { color: #f3e3d6; margin: 0 0 1.3rem; max-width: 28rem; }
+.su-perks { display: grid; gap: 0.6rem; }
+.su-perk { display: flex; gap: 0.8rem; align-items: center; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 18px; padding: 0.7rem 0.9rem; backdrop-filter: blur(6px); }
+.su-perk strong { display: block; color: #fff; font-size: 0.98rem; }
+.su-perk span { color: #ead8ca; font-size: 0.88rem; }
+.su-ico { flex: 0 0 auto; width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; background: #fff; color: var(--coral-strong); }
+@media (max-width: 860px) {
+  .auth-page.signup .auth-grid { grid-template-columns: 1fr; }
+  .su-visual { margin: 0.75rem; padding: 1.4rem 1.4rem 1.6rem; border-radius: 26px; }
+  .su-collage { min-height: 170px; }
+  .su-copy h2 { font-size: 1.7rem; margin-top: 0.6rem; }
+  .su-perks { display: none; }
+  .su-copy > p { margin-bottom: 0; }
+}
+.su-collage { height: clamp(220px, 36vh, 340px); min-height: 0; }
+.su-ph { aspect-ratio: auto !important; }
+.su-ph.a { width: 40%; height: 86%; left: 3%; top: 6%; }
+.su-ph.b { width: 38%; height: 66%; left: 33%; top: 30%; }
+.su-ph.c { width: 33%; height: 80%; right: 3%; top: 0; }
+.su-ico svg { stroke: var(--coral-strong); }
+@media (max-width: 860px) { .su-collage { height: 170px; } }
