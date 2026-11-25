@@ -117,3 +117,7 @@ Import the GitHub repo, add the environment variables and deploy. Then add the V
 npm test   # Bible reference parser, including the other 6 languages
 ```
 The database privacy tests (48 checks) are in `supabase/tests/`.
+
+## Contributors
+
+- **Helen** ([@helenn-szn](https://github.com/helenn-szn)), Lagos, Nigeria: creator of VerseNote, product and design.
