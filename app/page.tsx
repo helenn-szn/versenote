@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import { createClient } from "@/lib/supabase/server";
 import { PHOTOS, photoUrl } from "@/lib/photos";
 import Photo from "@/components/Photo";
+import ScrollFX from "@/components/ScrollFX";
 
 const STEPS = [
   {
@@ -85,6 +86,7 @@ export default async function Home() {
 
   return (
     <div className="landing bleed">
+      <ScrollFX />
       {/* ---------- Hero ---------- */}
       <section className="hero hero-spice">
         <div className="hero-bg" aria-hidden />

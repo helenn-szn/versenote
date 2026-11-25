@@ -631,3 +631,108 @@ details summary { cursor: pointer; font-weight: 700; }
   .cta-card.right { display: none; }
 }
 @media (max-width: 520px) { .pv-joined { display: none; } .pv-qr { max-width: 85%; } }
+
+/* ================= Sign in (redesigned) ================= */
+.auth-page { margin-top: -1.25rem; margin-bottom: -4rem; }
+.auth-grid { display: grid; grid-template-columns: 1fr 1.05fr; min-height: calc(100vh - 65px); }
+.auth-left { display: flex; align-items: center; justify-content: center; padding: 3rem 1.5rem; position: relative;
+  background: radial-gradient(40% 35% at 15% 10%, color-mix(in srgb, var(--coral) 10%, transparent), transparent 70%); }
+.auth-card { width: 100%; max-width: 420px; }
+.auth-card h1 { font-size: clamp(2rem, 3.6vw, 2.6rem); letter-spacing: -0.045em; margin-bottom: 0.4rem; }
+.auth-sub { color: var(--muted); margin-bottom: 1.6rem; }
+.seg { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); margin-bottom: 1.4rem; }
+.seg button { border: 0; background: transparent; font: inherit; font-weight: 700; color: var(--muted); padding: 0.6rem; border-radius: 999px; cursor: pointer; }
+.seg button.on { background: var(--surface); color: var(--ink); box-shadow: var(--shadow); }
+.auth-form { display: grid; gap: 1rem; }
+.auth-form .input { padding: 0.85rem 1rem; border-radius: 14px; }
+.auth-alt { display: grid; gap: 0.8rem; margin-top: 1.1rem; justify-items: center; }
+.auth-alt .btn { gap: 0.6rem; }
+.link-btn { background: none; border: 0; font: inherit; font-weight: 700; color: var(--coral-text); cursor: pointer; padding: 0.3rem; text-decoration: underline; text-underline-offset: 3px; }
+.auth-sent { background: var(--coral-tint); border-radius: 18px; padding: 1.2rem; }
+.auth-sent p { margin: 0.3rem 0 0.6rem; }
+.auth-privacy { display: flex; gap: 0.5rem; align-items: flex-start; color: var(--muted); font-size: 0.85rem; margin-top: 1.8rem; padding-top: 1.2rem; border-top: 1px solid var(--line); }
+.auth-privacy svg { flex: 0 0 auto; margin-top: 0.2rem; color: var(--coral-text); }
+
+.auth-visual { position: relative; overflow: hidden; margin: 1rem 1rem 1rem 0; border-radius: 32px; }
+.auth-visual .photo { position: absolute; inset: 0; border-radius: 0; }
+.auth-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(232, 102, 79, 0.15) 0%, rgba(90, 61, 43, 0.25) 45%, rgba(28, 25, 23, 0.85) 100%); }
+.auth-float { position: absolute; z-index: 2; background: rgba(255, 255, 255, 0.94); color: #1c1917; border-radius: 18px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.2);
+  animation: float 7s ease-in-out infinite; }
+.auth-float.verse { top: 10%; left: 8%; max-width: 300px; padding: 0.9rem 1rem; border-left: 4px solid #e8664f; }
+.auth-float.verse .ref { font-weight: 800; font-size: 0.9rem; }
+.auth-float.verse .ref small { color: #8b5e3c; margin-left: 0.3rem; font-weight: 800; }
+.auth-float.verse .text { font-size: 0.95rem; margin-top: 0.2rem; }
+.auth-float.chip { top: 30%; right: 8%; padding: 0.55rem 0.95rem; border-radius: 999px; font-weight: 800; font-size: 0.88rem; display: flex; gap: 0.5rem; align-items: center; animation-delay: -3s; }
+.auth-float.chip .dot { width: 9px; height: 9px; border-radius: 99px; background: #e8664f; box-shadow: 0 0 0 4px #fdede9; }
+.auth-quote { position: absolute; left: 8%; right: 8%; bottom: 8%; z-index: 2; color: #fff; }
+.auth-quote h2 { font-size: clamp(1.8rem, 3vw, 2.6rem); line-height: 1.05; letter-spacing: -0.04em; color: #fff; margin-bottom: 0.6rem; }
+.auth-quote h2 em { font-style: normal; color: #f6b4a5; }
+.auth-quote p { color: #f3e6dc; margin: 0; max-width: 26rem; }
+
+@media (max-width: 860px) {
+  .auth-grid { grid-template-columns: 1fr; min-height: 0; }
+  .auth-visual { order: -1; margin: 0.75rem; height: 220px; border-radius: 24px; }
+  .auth-float, .auth-quote p { display: none; }
+  .auth-quote h2 { font-size: 1.5rem; }
+  .auth-left { padding: 1.5rem 1.25rem 3rem; }
+}
+
+/* ================= Motion: scroll reveals + micro-interactions ================= */
+html { scroll-behavior: smooth; }
+.scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 3px; z-index: 50; transform-origin: 0 50%; transform: scaleX(0);
+  background: linear-gradient(90deg, var(--coral), var(--brown)); pointer-events: none; }
+
+.fx .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.7s cubic-bezier(0.2, 0.7, 0.2, 1), transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.fx .reveal.in { opacity: 1; transform: none; }
+.fx .split > .reveal:not(.in):first-child { transform: translateX(-28px); }
+.fx .split.reverse > .reveal:not(.in):last-child, .fx .split > .reveal:not(.in):last-child { transform: translateX(28px); }
+
+/* Hero entrance */
+@keyframes rise { from { opacity: 0; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes pop { from { opacity: 0; transform: translateY(14px) scale(0.94); } to { opacity: 1; transform: none; } }
+@keyframes draw { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes drift { 0%, 100% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(-2%, 2%, 0); } }
+.hero-spice .hero-copy > * { animation: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.hero-spice .hero-copy > :nth-child(2) { animation-delay: 0.12s; }
+.hero-spice .hero-copy > :nth-child(3) { animation-delay: 0.22s; }
+.hero-spice .hero-copy > :nth-child(4) { animation-delay: 0.32s; }
+.hero-spice .squiggle::after { animation: draw 0.9s 0.55s cubic-bezier(0.6, 0, 0.2, 1) both; }
+.collage-main { animation: rise 0.9s 0.15s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.collage-small { animation: pop 0.8s 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.fc.typing { animation: pop 0.6s 0.8s both, float 6s 1.4s ease-in-out infinite; }
+.fc.qr-mini { animation: pop 0.6s 1s both, float 7s 1.6s ease-in-out infinite reverse; }
+.fc.verse-fc { animation: pop 0.6s 1.2s both, float 8s 1.8s ease-in-out infinite; }
+.hero-bg { animation: drift 18s ease-in-out infinite; }
+.avatars img { transition: transform 0.2s; }
+.avatars img:hover { transform: translateY(-4px) scale(1.08); z-index: 1; position: relative; }
+
+/* Micro-interactions */
+.btn { transition: transform 0.15s ease, box-shadow 0.2s ease, filter 0.15s, background 0.15s, border-color 0.15s; }
+.btn:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 10px 22px -10px color-mix(in srgb, var(--coral-strong) 70%, transparent); }
+.btn.secondary:not(:disabled):hover, .btn.ghost:not(:disabled):hover { box-shadow: none; }
+.btn:not(:disabled):active { transform: translateY(0) scale(0.98); }
+.landing .photo img, .place-photo .photo img, .step-photo .photo img { transition: transform 0.8s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.landing .split .photo:hover img, .place-photo:hover .photo img, .step:hover .photo img { transform: scale(1.05); }
+.step { transition: transform 0.25s ease, box-shadow 0.25s ease; }
+.step:hover { transform: translateY(-6px); box-shadow: var(--shadow); }
+.step .num { transition: transform 0.3s ease, background 0.2s, color 0.2s; }
+.step:hover .num { transform: rotate(-10deg) scale(1.1); background: var(--coral-strong); color: #fff; }
+.flow span { transition: transform 0.2s, border-color 0.2s; }
+.flow span:hover { transform: translateY(-2px); border-color: var(--coral); }
+.place-photo .place { transition: transform 0.25s; }
+.place-photo:hover .place { transform: translateY(-4px); }
+.trust-icon { transition: transform 0.3s ease, background 0.3s; }
+.trust-card:hover .trust-icon { transform: rotate(-8deg) scale(1.08); background: rgba(232, 102, 79, 0.28); }
+.nav a { transition: color 0.15s, background 0.15s; }
+.sf-links a { position: relative; width: fit-content; }
+.sf-links a::after { content: ""; position: absolute; left: 0; right: 0; bottom: -2px; height: 2px; background: #f6b4a5; transform: scaleX(0); transform-origin: left; transition: transform 0.25s; }
+.sf-links a:hover::after { transform: scaleX(1); }
+.skyline circle[opacity="0.9"] { animation: sunrise 1.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; transform-box: fill-box; transform-origin: center; }
+@keyframes sunrise { from { transform: translateY(40px); } to { transform: none; } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .fx .reveal { opacity: 1 !important; transform: none !important; }
+}
+@media (max-width: 860px) { .auth-visual .auth-float { display: none; } }
