@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import QRCode from "qrcode";
 import LoginForm from "./LoginForm";
 import Photo from "@/components/Photo";
 import { PHOTOS } from "@/lib/photos";
@@ -10,22 +12,62 @@ const PERK_ICONS = ["type", "mic", "ask"] as const;
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ mode?: string; next?: string }> }) {
   const { locale, t } = await getI18n();
   const sp = await searchParams;
-  const signup = sp.mode === "signup" && !sp.next?.startsWith("/s/");
+  const pastor = /^\/pastor(\/|$|\?)/.test(sp.next ?? "");
+  const signup = !pastor && sp.mode === "signup" && !sp.next?.startsWith("/s/");
+  const qr = pastor ? await QRCode.toString("VerseNote", { type: "svg", margin: 0, color: { dark: "#1c1917", light: "#0000" } }) : "";
   const v = SHOWCASE[locale];
   const [before, after = ""] = t.landing.h1.split("{word}");
 
   // The form keeps the same place in the tree in both layouts, so switching tabs never resets it.
   return (
-    <div className={`bleed auth-page ${signup ? "signup" : ""}`}>
+    <div className={`bleed auth-page ${signup ? "signup" : ""} ${pastor ? "pastor" : ""}`}>
       <div className="auth-grid">
         <div className="auth-left">
           {signup && <span className="su-tag">{t.login.suTag}</span>}
+          {pastor && <span className="su-tag pastor-tag">{t.login.pTag}</span>}
           <Suspense>
             <LoginForm />
           </Suspense>
+          {pastor && (
+            <Link href="/login" className="pa-member">
+              {t.login.pMember}
+            </Link>
+          )}
         </div>
 
-        {signup ? (
+        {pastor ? (
+          <aside className="pa-visual" aria-hidden>
+            <Photo photo={PHOTOS.homily} width={1200} priority />
+            <div className="pa-overlay" />
+            <div className="pa-dash">
+              <div className="pa-dash-head">
+                <div className="pa-qr" dangerouslySetInnerHTML={{ __html: qr }} />
+                <div>
+                  <strong>{t.landing.sampleTitle}</strong>
+                  <span>{t.pastorsPage.thisSunday}</span>
+                </div>
+              </div>
+              <div className="pa-stats">
+                <div>
+                  <b>128</b>
+                  <span>{t.landing.joinedSunday}</span>
+                </div>
+                <div>
+                  <b>3</b>
+                  <span>{t.login.pNewQLabel}</span>
+                </div>
+              </div>
+              <div className="pa-q">
+                <span className="badge">{t.landing.anonymous}</span>
+                <p>{t.pastorsPage.q1}</p>
+              </div>
+            </div>
+            <div className="pa-copy">
+              <h2>{t.login.pPanelTitle}</h2>
+              <p>{t.login.pPanelText}</p>
+            </div>
+          </aside>
+        ) : signup ? (
           <aside className="su-visual" aria-hidden>
             <div className="su-collage">
               <div className="su-ph a">

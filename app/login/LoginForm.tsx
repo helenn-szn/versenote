@@ -21,6 +21,7 @@ export default function LoginForm() {
   const router = useRouter();
   const next = safeNext(params.get("next"));
   const joining = next.startsWith("/s/");
+  const pastor = /^\/pastor(\/|$|\?)/.test(next);
   const supabase = createClient();
 
   const [mode, setMode] = useState<Mode>(joining || params.get("mode") === "signup" ? "signup" : "signin");
@@ -93,8 +94,20 @@ export default function LoginForm() {
     if (error) setError(friendly(error.message, L));
   }
 
-  const title = joining ? L.titleJoin : mode === "signup" ? L.titleSignup : mode === "link" ? L.titleLink : L.titleSignin;
-  const subtitle = joining ? L.subJoin : mode === "signup" ? L.subSignup : mode === "link" ? L.subLink : L.subSignin;
+  const title = joining
+    ? L.titleJoin
+    : mode === "link"
+      ? L.titleLink
+      : pastor
+        ? mode === "signup" ? L.pTitleSignup : L.pTitleSignin
+        : mode === "signup" ? L.titleSignup : L.titleSignin;
+  const subtitle = joining
+    ? L.subJoin
+    : mode === "link"
+      ? L.subLink
+      : pastor
+        ? mode === "signup" ? L.pSubSignup : L.pSubSignin
+        : mode === "signup" ? L.subSignup : L.subSignin;
 
   return (
     <div className="auth-card">
