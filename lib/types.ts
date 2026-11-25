@@ -17,6 +17,7 @@ export type NoteContent = {
   version: 1 | 2;
   sermon_slug?: string;
   doc?: import("./notes/doc").Doc;
+  questions?: DraftQuestion[];
   blocks?: Block[];
 };
 
@@ -28,7 +29,11 @@ export type Note = {
   sermon_date: string | null;
   content: NoteContent;
   updated_at: string;
+  share_token?: string | null;
 };
+
+/** A question jotted during the sermon, kept apart from the notes until it is sent. */
+export type DraftQuestion = { id: string; text: string; sent_at?: string };
 
 export type SharedScripture = { position: number; reference: string; translation: string; verse_text: string };
 

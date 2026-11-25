@@ -14,7 +14,7 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
 
   const { data } = await supabase
     .from("notes")
-    .select("id, sermon_id, title, preacher_name, sermon_date, content, updated_at")
+    .select("id, sermon_id, title, preacher_name, sermon_date, content, updated_at, share_token")
     .eq("id", id)
     .maybeSingle();
   if (!data) notFound(); // also what another user sees: RLS hides the row
@@ -30,7 +30,7 @@ export default async function NotePage({ params }: { params: Promise<{ id: strin
 
   return (
     <>
-      <NoteEditor note={note} sermon={sermon} defaultTranslation={toTranslation(profile?.preferred_translation)} />
+      <NoteEditor note={note} sermon={sermon} defaultTranslation={toTranslation(profile?.preferred_translation)} displayName={profile?.display_name ?? ""} />
       {sermon && <AskPreacher sermon={sermon} initialName={profile?.display_name ?? ""} />}
     </>
   );

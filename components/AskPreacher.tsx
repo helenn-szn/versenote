@@ -46,6 +46,13 @@ export default function AskPreacher({ sermon, initialName }: { sermon: SharedSer
     setPublicQA((p as PublicQA[] | null) ?? []);
   }, [supabase, sermon.id, sermon.slug]);
 
+  // Questions sent from the jotter sheet show up here too.
+  useEffect(() => {
+    const reload = () => void load();
+    window.addEventListener("versenote:questions-sent", reload);
+    return () => window.removeEventListener("versenote:questions-sent", reload);
+  }, [load]);
+
   useEffect(() => {
     void load();
   }, [load]);

@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   // The bundled Bibles are read from disk by the verse lookup.
-  outputFileTracingIncludes: { "/api/verse": ["./data/bibles/**/*"] },
+  outputFileTracingIncludes: { "/api/verse": ["./data/bibles/**/*"], "/api/ai/translate": ["./data/bibles/**/*"] },
   async headers() {
     return [
       {

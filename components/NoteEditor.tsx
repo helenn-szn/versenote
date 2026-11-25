@@ -10,12 +10,13 @@ import { Placeholder } from "@tiptap/extensions";
 import { createClient } from "@/lib/supabase/client";
 import { findReferenceAtEnd, formatReference, parseReference } from "@/lib/bible/parse";
 import { formatDate } from "@/lib/format";
-import { sharedVerses, type Note, type SharedSermon, type Verse } from "@/lib/types";
+import { sharedVerses, type DraftQuestion, type Note, type SharedSermon, type Verse } from "@/lib/types";
 import { contentToDoc, docText, type DocNode, type ScriptureAttrs } from "@/lib/notes/doc";
 import { VerseText } from "./ScriptureCard";
 import SermonCover from "./SermonCover";
 import TranslationPicker from "./TranslationPicker";
 import SermonRecorder, { type SermonNotes } from "./SermonRecorder";
+import { QuestionsSheet, ShareSheet, TranslateSheet } from "./NoteSheets";
 import { ScriptureNode } from "./editor/ScriptureNode";
 import type { TranslationId } from "@/lib/bible/translations";
 import { useI18n } from "@/lib/i18n/client";
@@ -93,10 +94,12 @@ export default function NoteEditor({
   note,
   sermon,
   defaultTranslation,
+  displayName = "",
 }: {
   note: Note;
   sermon: SharedSermon | null;
   defaultTranslation: TranslationId;
+  displayName?: string;
 }) {
   const { locale, t } = useI18n();
   const E = t.editor;
@@ -116,6 +119,10 @@ export default function NoteEditor({
   const [translation, setTranslation] = useState<TranslationId>(defaultTranslation);
 
   const [recSlot, setRecSlot] = useState<HTMLElement | null>(null);
+  const [sheet, setSheet] = useState<null | "share" | "translate" | "questions">(null);
+  const [questions, setQuestionsState] = useState<DraftQuestion[]>(note.content.questions ?? []);
+  const questionsRef = useRef(questions);
+  questionsRef.current = questions;
   const titleRef = useRef<HTMLTextAreaElement | null>(null);
   const [kb, setKb] = useState(0); // on-screen keyboard height, so the dock sits above it
 
@@ -164,7 +171,7 @@ export default function NoteEditor({
         title,
         preacher_name: preacher || null,
         sermon_date: date || null,
-        content: { ...rest, version: 2, doc: ed.getJSON() },
+        content: { ...rest, version: 2, doc: ed.getJSON(), questions: questionsRef.current },
       })
       .eq("id", note.id);
     setSaveState(error ? "error" : "saved");
@@ -175,6 +182,15 @@ export default function NoteEditor({
     if (timer.current) clearTimeout(timer.current);
     timer.current = setTimeout(save, 800);
   }, [save]);
+
+  const setQuestions = useCallback(
+    (q: DraftQuestion[]) => {
+      questionsRef.current = q;
+      setQuestionsState(q);
+      scheduleSave();
+    },
+    [scheduleSave]
+  );
 
   const firstRender = useRef(true);
   useEffect(() => {
@@ -425,9 +441,17 @@ export default function NoteEditor({
         <button type="button" className="btn ghost small" onClick={() => router.push("/notes")}>
           {E.back}
         </button>
-        <span className={`save-state ${saveState}`} aria-live="polite">
-          {saveState === "saving" ? E.saving : saveState === "error" ? E.notSaved : E.saved}
-        </span>
+        <div className="note-actions">
+          <span className={`save-state ${saveState}`} aria-live="polite">
+            {saveState === "saving" ? E.saving : saveState === "error" ? E.notSaved : E.saved}
+          </span>
+          <button type="button" className="icon-btn" onClick={() => setSheet("translate")} aria-label={t.translate.title} title={t.translate.title}>
+            <TranslateIcon />
+          </button>
+          <button type="button" className="icon-btn" onClick={() => setSheet("share")} aria-label={t.share.title} title={t.share.title}>
+            <ShareIcon />
+          </button>
+        </div>
       </div>
 
       {(sermon || title) && (
@@ -556,8 +580,39 @@ export default function NoteEditor({
           {tb(E.tbBullets, fmtState?.bullet, () => editor?.chain().focus().toggleBulletList().run(), <ListIcon />)}
           {tb(E.tbQuote, fmtState?.quote, () => editor?.chain().focus().toggleBlockquote().run(), <QuoteIcon />)}
         </div>
+        <button
+          type="button"
+          className="q-btn"
+          onClick={() => setSheet("questions")}
+          aria-label={t.questions.title}
+          title={t.questions.title}
+        >
+          <span aria-hidden>?</span>
+          {questions.some((q) => !q.sent_at) && <span className="q-count">{questions.filter((q) => !q.sent_at).length}</span>}
+        </button>
         <div ref={setRecSlot} className="dock-rec" />
       </div>
+
+      {sheet === "share" && (
+        <ShareSheet
+          noteId={note.id}
+          title={title}
+          initialToken={note.share_token ?? null}
+          plainText={() => (editor ? editor.getText({ blockSeparator: "\n\n" }) : "")}
+          onClose={() => setSheet(null)}
+        />
+      )}
+      {sheet === "translate" && <TranslateSheet noteId={note.id} onClose={() => setSheet(null)} />}
+      {sheet === "questions" && (
+        <QuestionsSheet
+          questions={questions}
+          setQuestions={setQuestions}
+          sermon={sermon}
+          displayName={displayName}
+          title={title}
+          onClose={() => setSheet(null)}
+        />
+      )}
       <hr className="divider" />
       <div className="row" style={{ justifyContent: "space-between" }}>
         <span className="meta">{note.sermon_date ? fmt(E.sermonOn, { date: formatDate(note.sermon_date, locale) }) : ""}</span>
@@ -584,6 +639,24 @@ function QuoteIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M7.2 17c-1.9 0-3.2-1.5-3.2-3.6C4 9.9 6.4 7.3 9.4 6.5l.6 1.3c-1.7.7-2.8 2-3 3.4.3-.1.6-.2 1-.2 1.6 0 2.8 1.2 2.8 2.9S9.4 17 7.2 17Zm8.8 0c-1.9 0-3.2-1.5-3.2-3.6 0-3.5 2.4-6.1 5.4-6.9l.6 1.3c-1.7.7-2.8 2-3 3.4.3-.1.6-.2 1-.2 1.6 0 2.8 1.2 2.8 2.9S18.2 17 16 17Z" />
+    </svg>
+  );
+}
+
+function ShareIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" />
+      <path d="M5 12v6.5A2.5 2.5 0 0 0 7.5 21h9a2.5 2.5 0 0 0 2.5-2.5V12" />
+    </svg>
+  );
+}
+
+function TranslateIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 5h9M8.5 3v2M6 5c.5 3 2.5 5.5 5.5 7M11 5c-.6 3.4-3 6.3-6.5 8" />
+      <path d="m12 21 4.5-10L21 21M13.6 17.5h5.8" />
     </svg>
   );
 }
