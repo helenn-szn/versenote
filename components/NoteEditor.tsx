@@ -116,6 +116,29 @@ export default function NoteEditor({
   const [translation, setTranslation] = useState<TranslationId>(defaultTranslation);
 
   const [recSlot, setRecSlot] = useState<HTMLElement | null>(null);
+  const titleRef = useRef<HTMLTextAreaElement | null>(null);
+  const [kb, setKb] = useState(0); // on-screen keyboard height, so the dock sits above it
+
+  // Long titles wrap instead of running off the page.
+  useEffect(() => {
+    const el = titleRef.current;
+    if (!el) return;
+    el.style.height = "auto";
+    el.style.height = `${el.scrollHeight}px`;
+  }, [title]);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const update = () => setKb(Math.max(0, Math.round(window.innerHeight - vv.height - vv.offsetTop)));
+    vv.addEventListener("resize", update);
+    vv.addEventListener("scroll", update);
+    update();
+    return () => {
+      vv.removeEventListener("resize", update);
+      vv.removeEventListener("scroll", update);
+    };
+  }, []);
   const dismissed = useRef(new Set<string>());
   const suggestionRef = useRef<Suggestion | null>(null);
   suggestionRef.current = suggestion;
@@ -415,7 +438,21 @@ export default function NoteEditor({
 
       <article className="paper">
         {sermon && <p className="eyebrow" style={{ marginBottom: "0.2rem" }}>{E.sharedByChurch}</p>}
-        <input className="note-title" value={title} onChange={(e) => setTitle(e.target.value)} placeholder={E.titlePh} aria-label={E.titlePh} />
+        <textarea
+          ref={titleRef}
+          className="note-title"
+          rows={1}
+          value={title}
+          onChange={(e) => setTitle(e.target.value.replace(/\n/g, " "))}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              editor?.commands.focus("start");
+            }
+          }}
+          placeholder={E.titlePh}
+          aria-label={E.titlePh}
+        />
         <div className="note-meta">
           <input className="input" value={preacher} onChange={(e) => setPreacher(e.target.value)} placeholder={E.preacherPh} aria-label={E.preacherPh} />
           <input className="input" type="date" value={date ?? ""} onChange={(e) => setDate(e.target.value)} aria-label={E.date} />
@@ -456,19 +493,7 @@ export default function NoteEditor({
           </div>
         )}
 
-        <div className="toolbar" role="toolbar" aria-label={E.toolbar}>
-          {tb(E.tbHeading, fmtState?.h2, () => editor?.chain().focus().toggleHeading({ level: 2 }).run(), "H1", "txt")}
-          {tb(E.tbSubheading, fmtState?.h3, () => editor?.chain().focus().toggleHeading({ level: 3 }).run(), "H2", "txt")}
-          <span className="tb-sep" aria-hidden />
-          {tb(E.tbBold, fmtState?.bold, () => editor?.chain().focus().toggleBold().run(), <b>B</b>, "txt")}
-          {tb(E.tbItalic, fmtState?.italic, () => editor?.chain().focus().toggleItalic().run(), <i style={{ fontFamily: "Georgia, serif" }}>I</i>, "txt")}
-          {tb(E.tbHighlight, fmtState?.highlight, () => editor?.chain().focus().toggleHighlight().run(), <span className="tb-hl">A</span>, "txt")}
-          <span className="tb-sep" aria-hidden />
-          {tb(E.tbBullets, fmtState?.bullet, () => editor?.chain().focus().toggleBulletList().run(), <ListIcon />)}
-          {tb(E.tbQuote, fmtState?.quote, () => editor?.chain().focus().toggleBlockquote().run(), <QuoteIcon />)}
-          <span className="tb-grow" />
-          <div ref={setRecSlot} className="tb-rec" />
-        </div>
+
 
         <div className="note-editor">
           <EditorContent editor={editor} />
@@ -521,6 +546,18 @@ export default function NoteEditor({
         slot={recSlot}
       />
 
+      <div className="dock" style={{ bottom: `calc(${kb}px + env(safe-area-inset-bottom, 0px) + 12px)` }}>
+        <div className="dock-tools" role="toolbar" aria-label={E.toolbar}>
+          {tb(E.tbHeading, fmtState?.h2, () => editor?.chain().focus().toggleHeading({ level: 2 }).run(), "H1", "txt")}
+          {tb(E.tbSubheading, fmtState?.h3, () => editor?.chain().focus().toggleHeading({ level: 3 }).run(), "H2", "txt")}
+          {tb(E.tbBold, fmtState?.bold, () => editor?.chain().focus().toggleBold().run(), <b>B</b>, "txt")}
+          {tb(E.tbItalic, fmtState?.italic, () => editor?.chain().focus().toggleItalic().run(), <i style={{ fontFamily: "Georgia, serif" }}>I</i>, "txt")}
+          {tb(E.tbHighlight, fmtState?.highlight, () => editor?.chain().focus().toggleHighlight().run(), <span className="tb-hl">A</span>, "txt")}
+          {tb(E.tbBullets, fmtState?.bullet, () => editor?.chain().focus().toggleBulletList().run(), <ListIcon />)}
+          {tb(E.tbQuote, fmtState?.quote, () => editor?.chain().focus().toggleBlockquote().run(), <QuoteIcon />)}
+        </div>
+        <div ref={setRecSlot} className="dock-rec" />
+      </div>
       <hr className="divider" />
       <div className="row" style={{ justifyContent: "space-between" }}>
         <span className="meta">{note.sermon_date ? fmt(E.sermonOn, { date: formatDate(note.sermon_date, locale) }) : ""}</span>

@@ -333,8 +333,8 @@ export default function SermonRecorder({
       </button>
     </div>
   ) : (
-    <button type="button" className="rec-inline rec-start" onClick={startRecording} title={R.recordSermon}>
-      <span className="rec-dot" aria-hidden /> <span>{R.record}</span>
+    <button type="button" className="rec-start" onClick={startRecording} title={R.recordSermon} aria-label={R.recordSermon}>
+      <MicIcon />
     </button>
   );
 
@@ -495,6 +495,15 @@ function PlayIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
       <path d="M8 5.5v13a1 1 0 0 0 1.5.86l10.5-6.5a1 1 0 0 0 0-1.72L9.5 4.64A1 1 0 0 0 8 5.5Z" />
+    </svg>
+  );
+}
+
+function MicIcon() {
+  return (
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor" />
+      <path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21" />
     </svg>
   );
 }
