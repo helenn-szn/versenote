@@ -63,7 +63,7 @@ export default function LoginForm() {
         options: { emailRedirectTo: callback(), shouldCreateUser: true },
       });
       setBusy(false);
-      if (error) return setError(friendly(error.message, L));
+      if (error) return setError(friendly(error.message, L, mode));
       return setSent(true);
     }
 
@@ -74,7 +74,7 @@ export default function LoginForm() {
         options: { emailRedirectTo: callback() },
       });
       setBusy(false);
-      if (error) return setError(friendly(error.message, L));
+      if (error) return setError(friendly(error.message, L, mode));
       if (!data.session) return setSent(true); // email confirmation is switched on in Supabase
       router.push(next);
       router.refresh();
@@ -83,7 +83,7 @@ export default function LoginForm() {
 
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
-    if (error) return setError(friendly(error.message, L));
+    if (error) return setError(friendly(error.message, L, mode));
     router.push(next);
     router.refresh();
   }
@@ -91,7 +91,7 @@ export default function LoginForm() {
   async function google() {
     setError(null);
     const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: callback() } });
-    if (error) setError(friendly(error.message, L));
+    if (error) setError(friendly(error.message, L, mode));
   }
 
   const title = joining
@@ -205,11 +205,11 @@ export default function LoginForm() {
   );
 }
 
-function friendly(msg: string, L: Dict["login"]): string {
+function friendly(msg: string, L: Dict["login"], mode?: string): string {
   const m = msg.toLowerCase();
   if (m.includes("invalid login")) return L.errInvalid;
   if (m.includes("already registered")) return L.errRegistered;
-  if (m.includes("rate limit") || m.includes("too many")) return L.errRate;
+  if (m.includes("rate limit") || m.includes("too many")) return mode === "signup" ? L.errRateSignup : L.errRate;
   if (m.includes("not enabled") || m.includes("provider")) return L.errProvider;
   if (m.includes("email not confirmed")) return L.errUnconfirmed;
   return msg;

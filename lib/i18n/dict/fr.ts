@@ -173,6 +173,7 @@ const fr: Dict = {
     errPassword: "Choisissez un mot de passe d’au moins 8 caractères.",
     errInvalid: "Cet e-mail et ce mot de passe ne correspondent pas. Réessayez ou créez un compte.",
     errRegistered: "Un compte existe déjà avec cet e-mail. Connectez-vous plutôt.",
+    errRateSignup: "Impossible d’envoyer l’e-mail de confirmation pour le moment : trop d’e-mails ont été envoyés dans l’heure. Réessayez plus tard.",
     errRate: "Trop d’e-mails ont été envoyés récemment. Utilisez un mot de passe, ou réessayez dans un moment.",
     errProvider: "Cette option de connexion n’est pas encore disponible.",
     errUnconfirmed: "Veuillez d’abord confirmer votre e-mail. Le lien se trouve dans votre boîte de réception.",

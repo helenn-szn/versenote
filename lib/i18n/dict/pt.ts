@@ -173,6 +173,7 @@ const pt: Dict = {
     errPassword: "Use uma senha com pelo menos 8 caracteres.",
     errInvalid: "Esse e-mail e essa senha não conferem. Tente de novo ou crie uma conta.",
     errRegistered: "Já existe uma conta com este e-mail. Entre nela.",
+    errRateSignup: "Não foi possível enviar o e-mail de confirmação agora porque muitos foram enviados na última hora. Tente mais tarde.",
     errRate: "Muitos e-mails foram enviados recentemente. Use uma senha ou tente daqui a pouco.",
     errProvider: "Essa opção de acesso ainda não está disponível.",
     errUnconfirmed: "Confirme seu e-mail primeiro. O link está na sua caixa de entrada.",

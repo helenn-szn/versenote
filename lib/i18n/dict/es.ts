@@ -173,6 +173,7 @@ const es: Dict = {
     errPassword: "Usa una contraseña de al menos 8 caracteres.",
     errInvalid: "Ese correo y esa contraseña no coinciden. Inténtalo de nuevo o crea una cuenta.",
     errRegistered: "Ya existe una cuenta con este correo. Inicia sesión.",
+    errRateSignup: "No pudimos enviar el correo de confirmación ahora porque se enviaron demasiados en la última hora. Inténtalo más tarde.",
     errRate: "Se enviaron demasiados correos hace poco. Usa una contraseña o inténtalo dentro de un rato.",
     errProvider: "Esa opción de acceso aún no está disponible.",
     errUnconfirmed: "Primero confirma tu correo. Busca el enlace en tu bandeja de entrada.",

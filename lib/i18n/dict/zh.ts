@@ -173,6 +173,7 @@ const zh: Dict = {
     errPassword: "请使用至少 8 个字符的密码。",
     errInvalid: "邮箱和密码不匹配。请重试，或创建账户。",
     errRegistered: "该邮箱已有账户，请直接登录。",
+    errRateSignup: "过去一小时发送的邮件过多，暂时无法发送确认邮件。请稍后再试。",
     errRate: "最近发送的邮件过多。请改用密码，或稍后再试。",
     errProvider: "该登录方式暂不可用。",
     errUnconfirmed: "请先验证你的邮箱，链接在你的收件箱中。",

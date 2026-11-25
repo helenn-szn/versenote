@@ -173,6 +173,7 @@ const en = {
     errPassword: "Use a password of at least 8 characters.",
     errInvalid: "That email and password don't match. Try again, or create an account.",
     errRegistered: "There's already an account with this email. Sign in instead.",
+    errRateSignup: "We couldn't send the confirmation email right now because too many were sent in the last hour. Please try again later.",
     errRate: "Too many emails were sent recently. Use a password instead, or try again in a little while.",
     errProvider: "That sign-in option isn't available yet.",
     errUnconfirmed: "Please confirm your email first. Check your inbox for the link.",

@@ -173,6 +173,7 @@ const sw: Dict = {
     errPassword: "Tumia nenosiri lenye angalau herufi 8.",
     errInvalid: "Barua pepe na nenosiri hilo havilingani. Jaribu tena, au fungua akaunti.",
     errRegistered: "Tayari kuna akaunti yenye barua pepe hii. Ingia badala yake.",
+    errRateSignup: "Hatukuweza kutuma barua pepe ya uthibitisho sasa kwa sababu nyingi zimetumwa ndani ya saa moja. Tafadhali jaribu baadaye.",
     errRate: "Barua pepe nyingi zimetumwa hivi karibuni. Tumia nenosiri, au jaribu tena baada ya muda.",
     errProvider: "Njia hiyo ya kuingia bado haipatikani.",
     errUnconfirmed: "Tafadhali thibitisha barua pepe yako kwanza. Angalia kiungo kwenye kisanduku chako.",
