@@ -1,0 +1,40 @@
+"use client";
+
+import { useRef } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { TRANSLATIONS, type TranslationId } from "@/lib/bible/translations";
+
+// Changing the translation also saves it as the member's default, so it follows them across devices.
+export default function TranslationPicker({
+  value,
+  onChange,
+  compact = false,
+}: {
+  value: TranslationId;
+  onChange: (t: TranslationId) => void;
+  compact?: boolean;
+}) {
+  const supabase = useRef(createClient()).current;
+
+  async function change(t: TranslationId) {
+    onChange(t);
+    const { data } = await supabase.auth.getUser();
+    if (data.user) await supabase.from("profiles").update({ preferred_translation: t }).eq("id", data.user.id);
+  }
+
+  return (
+    <select
+      className="input"
+      style={compact ? { width: "auto", padding: "0.45rem 0.6rem", fontSize: "0.9rem" } : undefined}
+      value={value}
+      onChange={(e) => change(e.target.value as TranslationId)}
+      aria-label="Bible translation"
+    >
+      {TRANSLATIONS.map((t) => (
+        <option key={t.id} value={t.id}>
+          {compact ? t.id : `${t.name} (${t.id})`}
+        </option>
+      ))}
+    </select>
+  );
+}
