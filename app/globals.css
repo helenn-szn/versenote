@@ -931,3 +931,7 @@ html { scroll-behavior: smooth; }
   .stage-chip { position: relative; left: auto !important; right: auto !important; bottom: auto !important; margin-top: 0.8rem; }
   .stage-chip.q { display: none; }
 }
+
+/* No footer on the sign-in page */
+body:has(.auth-page) .sky-footer, body:has(.auth-page) .footer { display: none; }
+body:has(.auth-page) .auth-page { margin-bottom: -4rem; }
