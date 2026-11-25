@@ -5,6 +5,7 @@ import Logo from "@/components/Logo";
 import ThemeToggle, { THEME_SCRIPT } from "@/components/ThemeToggle";
 import SiteFooter from "@/components/SiteFooter";
 import LanguageSwitcher from "@/components/LanguageSwitcher";
+import MobileMenu from "@/components/MobileMenu";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getI18n } from "@/lib/i18n/server";
 import { LOCALE_TAGS } from "@/lib/i18n/config";
@@ -47,18 +48,34 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               {user ? (
                 <>
                   <Link href="/notes">{t.nav.notes}</Link>
-                  <Link href="/pastor" className="hide-sm">{t.nav.share}</Link>
-                  <Link href="/account">{t.nav.account}</Link>
+                  <Link href="/pastor" className="desk">{t.nav.share}</Link>
+                  <Link href="/account" className="desk">{t.nav.account}</Link>
                 </>
               ) : (
                 <>
-                  <Link href="/#how" className="hide-sm">{t.nav.how}</Link>
-                  <Link href="/pastors" className="hide-sm">{t.nav.pastors}</Link>
+                  <Link href="/#how" className="desk">{t.nav.how}</Link>
+                  <Link href="/pastors" className="desk">{t.nav.pastors}</Link>
                   <Link href="/login">{t.nav.signIn}</Link>
                 </>
               )}
-              <LanguageSwitcher signedIn={!!user} />
-              <ThemeToggle />
+              <span className="desk nav-tools">
+                <LanguageSwitcher signedIn={!!user} />
+                <ThemeToggle />
+              </span>
+              <MobileMenu
+                signedIn={!!user}
+                links={
+                  user
+                    ? [
+                        { href: "/pastor", label: t.nav.share },
+                        { href: "/account", label: t.nav.account },
+                      ]
+                    : [
+                        { href: "/#how", label: t.nav.how },
+                        { href: "/pastors", label: t.nav.pastors },
+                      ]
+                }
+              />
             </nav>
           </div>
         </header>
