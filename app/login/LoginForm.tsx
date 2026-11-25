@@ -18,8 +18,8 @@ export default function LoginForm() {
   const joining = next.startsWith("/s/");
   const supabase = createClient();
 
-  const [mode, setMode] = useState<Mode>(joining ? "signup" : "signin");
-  const [email, setEmail] = useState("");
+  const [mode, setMode] = useState<Mode>(joining || params.get("mode") === "signup" ? "signup" : "signin");
+  const [email, setEmail] = useState((params.get("email") ?? "").slice(0, 254));
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);

@@ -1,11 +1,11 @@
 // Original illustrations that match a sermon's topic, picked from words in its title.
 // Flat shapes in the VerseNote palette (coral, brown, sand). No external images needed.
 
-const C = "#E8664F"; // coral
-const CD = "#C94A33"; // deep coral
+const C = "#D4492F"; // coral
+const CD = "#B53D27"; // deep coral
 const CL = "#F6B4A5"; // light coral
-const B = "#8B5E3C"; // brown
-const BD = "#5A3D2B"; // dark brown
+const B = "#8C6A50"; // brown
+const BD = "#6C503B"; // dark brown
 const BL = "#C9A17F"; // light brown
 const W = "#FFFDFB";
 

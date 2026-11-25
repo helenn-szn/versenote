@@ -12,9 +12,13 @@ const TARGETS = [
   ".landing .place-photo",
   ".landing .trust-card",
   ".landing .flow span",
-  ".landing .cta-sky-copy",
-  ".landing .cta-card",
-  ".sky-footer .sf-grid > *",
+  ".landing .nb-head",
+  ".landing .nb-feat",
+  ".landing .nb-phone",
+  ".landing .world-head > *",
+  ".landing .world-stats > div",
+  ".landing .cta-panel",
+  ".sky-footer .sf-grid2 > *",
 ].join(",");
 
 export default function ScrollFX() {
