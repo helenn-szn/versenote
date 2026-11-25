@@ -16,7 +16,6 @@ const TARGETS = [
   ".landing .nb-feat",
   ".landing .nb-phone",
   ".landing .world-head > *",
-  ".landing .world-stats > div",
   ".landing .cta-panel",
   ".sky-footer .sf-grid2 > *",
 ].join(",");

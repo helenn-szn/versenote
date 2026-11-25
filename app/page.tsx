@@ -309,24 +309,6 @@ export default async function Home() {
             ))}
           </div>
         </div>
-        <div className="wide world-stats">
-          <div>
-            <strong>3</strong>
-            <span>Bible translations</span>
-          </div>
-          <div>
-            <strong>66</strong>
-            <span>books recognised</span>
-          </div>
-          <div>
-            <strong>1</strong>
-            <span>QR code per sermon</span>
-          </div>
-          <div>
-            <strong>0</strong>
-            <span>notes your pastor can read</span>
-          </div>
-        </div>
       </section>
 
       {/* ---------- Trust ---------- */}

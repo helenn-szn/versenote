@@ -935,3 +935,4 @@ html { scroll-behavior: smooth; }
 /* No footer on the sign-in page */
 body:has(.auth-page) .sky-footer, body:has(.auth-page) .footer { display: none; }
 body:has(.auth-page) .auth-page { margin-bottom: -4rem; }
+.world-sec { padding-bottom: 5.5rem !important; }
