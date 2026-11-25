@@ -3,8 +3,6 @@
 **Never miss a word while searching for the Word.**
 A sermon notebook for churches all over the world, built for the AI for Church Hackathon 2026 (Discipleship & Spiritual Growth track).
 
-Built during the hackathon window: every commit in this repository was made between 24 and 25 November 2026, before the 27 November deadline.
-
 Live: https://versenote.vercel.app · For pastors: https://versenote.vercel.app/pastors
 
 ## What it does
