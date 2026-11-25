@@ -27,12 +27,16 @@ const clock = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2,
 export default function SermonRecorder({
   noteId,
   notesText,
+  isBlank,
+  outline,
   onAddPoints,
   onAutoNotes,
   slot,
 }: {
   noteId: string;
   notesText: () => string;
+  isBlank: () => boolean; // nothing written yet, apart from outline headings
+  outline: () => string[]; // the sermon's points, used as section headings
   onAddPoints: (points: Point[]) => Promise<void>;
   onAutoNotes: (notes: SermonNotes) => Promise<void>;
   slot: HTMLElement | null; // the note toolbar, so recording is always one tap away
@@ -256,17 +260,17 @@ export default function SermonRecorder({
 
   // ---------- Notes written for an empty note ----------
   async function maybeAutoNotes(id: string) {
-    if (notesText().trim()) return; // the member already wrote something: offer "What did I miss?" instead
+    if (!isBlank()) return; // the member already wrote something: offer "What did I miss?" instead
     setStatus(id, R.autoNotes);
     try {
       const res = await fetch("/api/ai/gaps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ noteId, recordingId: id, mode: "notes" }),
+        body: JSON.stringify({ noteId, recordingId: id, mode: "notes", outline: outline() }),
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(body.error === "ai_unavailable" ? R.aiOff : body.error === "no_transcript" ? R.noTranscript : R.aiFail);
-      if ((body.sections as unknown[])?.length && !notesText().trim()) await onAutoNotes(body as SermonNotes);
+      if ((body.sections as unknown[])?.length && isBlank()) await onAutoNotes(body as SermonNotes);
     } catch (e) {
       fail(id, (e as Error).message);
     }

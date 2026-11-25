@@ -11,6 +11,8 @@ import SermonCover from "./SermonCover";
 import TranslationPicker from "./TranslationPicker";
 import type { TranslationId } from "@/lib/bible/translations";
 import { useI18n } from "@/lib/i18n/client";
+import OutlineEditor from "./OutlineEditor";
+import { parseOutline, serializeOutline } from "@/lib/outline";
 import { fmt } from "@/lib/i18n/config";
 
 
@@ -63,6 +65,7 @@ export default function SermonManager({
     recording_url: initial.recording_url ?? "",
     slug: initial.slug,
   });
+  const [points, setPoints] = useState<string[]>(parseOutline(initial.outline));
   const [slug, setSlug] = useState(initial.slug);
   const [isActive, setIsActive] = useState(initial.is_active);
   const [questionsOpen, setQuestionsOpen] = useState(initial.questions_open);
@@ -89,7 +92,7 @@ export default function SermonManager({
         title: form.title.trim(),
         preacher_name: form.preacher_name.trim() || null,
         sermon_date: form.sermon_date || null,
-        outline: form.outline.trim() || null,
+        outline: serializeOutline(points) || null,
         share_mode: form.share_mode,
         recording_url: form.recording_url.trim() || null,
         slug: newSlug,
@@ -372,8 +375,15 @@ export default function SermonManager({
           </div>
         </div>
         <div className="field">
-          <label htmlFor="o">{M.outline}</label>
-          <textarea id="o" className="textarea" value={form.outline} onChange={set("outline")} maxLength={20000} placeholder={M.outlinePh} />
+          <span className="label">{M.outline}</span>
+          <p className="meta" style={{ margin: "0 0 0.5rem" }}>{M.outlineHelp}</p>
+          <OutlineEditor
+            points={points}
+            onChange={(p) => {
+              setPoints(p);
+              setDetailsMsg(null);
+            }}
+          />
         </div>
         <div className="field">
           <label htmlFor="m">{M.see}</label>

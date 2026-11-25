@@ -1334,3 +1334,25 @@ body { overflow-x: clip; }
   .pa-dash-head { border-bottom: 0; padding-bottom: 0; }
   .pa-copy h2 { font-size: 1.7rem; }
 }
+
+/* ---------- Pastor: bulleted outline editor ---------- */
+.label { display: block; font-weight: 700; font-size: 0.92rem; margin-bottom: 0.35rem; }
+.outline-editor ul { list-style: none; margin: 0 0 0.6rem; padding: 0; display: grid; gap: 0.35rem; }
+.outline-editor li { display: flex; align-items: center; gap: 0.55rem; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 0.2rem 0.3rem 0.2rem 0.8rem; }
+.outline-editor li:focus-within { border-color: var(--coral); box-shadow: 0 0 0 3px var(--coral-tint); }
+.ol-dot { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); }
+.ol-input { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--ink); font: inherit; font-size: 1rem; padding: 0.55rem 0; outline: none; }
+.ol-actions { display: flex; gap: 0.1rem; opacity: 0.55; }
+.outline-editor li:hover .ol-actions, .outline-editor li:focus-within .ol-actions { opacity: 1; }
+.ol-actions .btn { min-width: 32px; padding: 0 0.4rem; }
+@media (max-width: 560px) { .ol-actions .btn:not(:last-child) { display: none; } }
+
+/* ---------- Member: follow the outline ---------- */
+.outline-points { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.35rem; }
+.op { width: 100%; display: flex; align-items: flex-start; gap: 0.6rem; text-align: left; border: 1px solid var(--line); background: var(--surface);
+  color: var(--ink); border-radius: 12px; padding: 0.6rem 0.75rem; font: inherit; font-weight: 600; cursor: pointer; line-height: 1.35; }
+.op:hover { border-color: var(--coral); }
+.op-mark { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--coral-tint); color: var(--coral-text);
+  font-weight: 800; font-size: 0.85rem; }
+.op.used { background: transparent; color: var(--muted); }
+.op.used .op-mark { background: var(--coral-strong); color: var(--on-primary); }

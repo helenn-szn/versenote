@@ -20,6 +20,7 @@ import { QuestionsSheet, ShareSheet, TranslateSheet } from "./NoteSheets";
 import { ScriptureNode } from "./editor/ScriptureNode";
 import type { TranslationId } from "@/lib/bible/translations";
 import { useI18n } from "@/lib/i18n/client";
+import { parseOutline } from "@/lib/outline";
 import { fmt } from "@/lib/i18n/config";
 
 type Passage = { reference: string; translation: string; verses: Verse[] };
@@ -374,6 +375,69 @@ export default function NoteEditor({
     [editor, translation, E.missedHeading]
   );
 
+  // ---------- Following the pastor's outline ----------
+  const outlinePoints = parseOutline(sermon?.outline);
+  const headingsInNote = (): string[] => {
+    const out: string[] = [];
+    editor?.state.doc.forEach((n) => {
+      if (n.type.name === "heading" && n.textContent.trim()) out.push(n.textContent.trim());
+    });
+    return out;
+  };
+  const usedPoints = new Set(headingsInNote().map((h) => h.toLowerCase()));
+
+  /** Tap a point: it becomes a subheading in the note, with the cursor ready underneath. Tapping again jumps to it. */
+  function selectPoint(point: string) {
+    if (!editor) return;
+    let found = -1;
+    editor.state.doc.forEach((n, pos) => {
+      if (found < 0 && n.type.name === "heading" && n.textContent.trim().toLowerCase() === point.toLowerCase()) found = pos + n.nodeSize;
+    });
+    if (found >= 0) {
+      const after = editor.state.doc.nodeAt(found);
+      if (!after || after.type.name !== "paragraph") editor.chain().insertContentAt(found, { type: "paragraph" }).run();
+      editor.chain().focus().setTextSelection(found + 1).scrollIntoView().run();
+      return;
+    }
+    const doc = editor.state.doc;
+    const block = [
+      { type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: point }] },
+      { type: "paragraph" },
+    ];
+    // Keep the pastor's order: if a later point is already in the note, put this one just before it.
+    const later = new Set(outlinePoints.slice(outlinePoints.findIndex((p) => p.toLowerCase() === point.toLowerCase()) + 1).map((p) => p.toLowerCase()));
+    let before = -1;
+    doc.forEach((n, pos) => {
+      if (before < 0 && n.type.name === "heading" && later.has(n.textContent.trim().toLowerCase())) before = pos;
+    });
+    if (before >= 0) {
+      editor.chain().focus().insertContentAt(before, block).setTextSelection(before + point.length + 3).scrollIntoView().run();
+      return;
+    }
+    // Otherwise add at the end, reusing a trailing empty line.
+    const last = doc.lastChild;
+    const end = last && last.type.name === "paragraph" && !last.textContent.trim() ? doc.content.size - last.nodeSize : doc.content.size;
+    editor.chain().focus().insertContentAt({ from: end, to: doc.content.size }, block).run();
+    const size = editor.state.doc.content.size;
+    editor.chain().setTextSelection(size - 1).scrollIntoView().run();
+  }
+
+  function addAllPoints() {
+    for (const p of outlinePoints) if (!usedPoints.has(p.toLowerCase())) selectPoint(p);
+    const first = outlinePoints[0];
+    if (first) selectPoint(first);
+  }
+
+  /** Blank = nothing written yet except headings (e.g. outline points waiting to be filled). */
+  const isBlank = () => {
+    let blank = true;
+    editor?.state.doc.forEach((n) => {
+      if (n.type.name === "heading") return;
+      if (n.type.name === "scripture" || n.textContent.trim()) blank = false;
+    });
+    return blank;
+  };
+
   /** Nothing was written during the sermon: fill the note from the recording (clearly marked as AI). */
   const addSermonNotes = useCallback(
     async (notes: SermonNotes) => {
@@ -382,24 +446,36 @@ export default function NoteEditor({
       const nodes: DocNode[] = [
         { type: "paragraph", content: [{ type: "text", text: `✦ ${E.aiNotesLabel}`, marks: [{ type: "highlight" }] }] },
       ];
+      const fetchVerse = async (r: string): Promise<DocNode | null> => {
+        const ref = parseReference(r);
+        if (!ref) return null;
+        try {
+          const res = await fetch(`/api/verse?ref=${encodeURIComponent(formatReference(ref))}&t=${translation}`);
+          if (!res.ok) return null;
+          const v = (await res.json()) as Passage;
+          return { type: "scripture", attrs: { reference: v.reference, translation: v.translation, verses: v.verses } };
+        } catch {
+          return null;
+        }
+      };
+      const seen = new Set<string>();
       for (const sec of notes.sections) {
         nodes.push({ type: "heading", attrs: { level: 2 }, content: [{ type: "text", text: sec.heading }] });
-        nodes.push({
-          type: "bulletList",
-          content: sec.points.map((p) => ({ type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: p.text }] }] })),
-        });
-        const refs = [...new Set(sec.points.flatMap((p) => p.refs))].slice(0, 4);
-        for (const r of refs) {
-          const ref = parseReference(r);
-          if (!ref) continue;
-          try {
-            const res = await fetch(`/api/verse?ref=${encodeURIComponent(formatReference(ref))}&t=${translation}`);
-            if (res.ok) {
-              const v = (await res.json()) as Passage;
-              nodes.push({ type: "scripture", attrs: { reference: v.reference, translation: v.translation, verses: v.verses } });
-            }
-          } catch {}
+        const items: DocNode[] = [];
+        for (const p of sec.points) {
+          const item: DocNode = { type: "listItem", content: [{ type: "paragraph", content: [{ type: "text", text: p.text }] }] };
+          // Each verse the preacher mentioned sits under the point where it came up (once per note).
+          for (const r of p.refs.slice(0, 3)) {
+            const key = r.toLowerCase().replace(/\s+/g, "");
+            if (seen.has(key)) continue;
+            seen.add(key);
+            const card = await fetchVerse(r);
+            if (card) item.content!.push(card);
+          }
+          items.push(item);
         }
+        if (items.length) nodes.push({ type: "bulletList", content: items });
+        else nodes.push({ type: "paragraph" });
       }
       nodes.push({ type: "paragraph" });
       editor.chain().setContent({ type: "doc", content: nodes }).focus("end").run();
@@ -503,11 +579,36 @@ export default function NoteEditor({
                 </div>
               </>
             )}
-            {sermon.outline && (
-              <details style={{ marginTop: sermon.scriptures.length ? "0.75rem" : 0 }}>
-                <summary>{E.outline}</summary>
-                <div className="outline" style={{ marginTop: "0.4rem" }}>{sermon.outline}</div>
-              </details>
+            {outlinePoints.length > 0 && (
+              <div className="outline-follow" style={{ marginTop: sermon.scriptures.length ? "0.9rem" : 0 }}>
+                <div className="row" style={{ justifyContent: "space-between", marginBottom: "0.35rem" }}>
+                  <span className="meta">{E.outlineHint}</span>
+                  {outlinePoints.some((p) => !usedPoints.has(p.toLowerCase())) && (
+                    <button type="button" className="btn ghost small" onMouseDown={(e) => e.preventDefault()} onClick={addAllPoints}>
+                      {E.outlineAll}
+                    </button>
+                  )}
+                </div>
+                <ul className="outline-points">
+                  {outlinePoints.map((p, i) => {
+                    const used = usedPoints.has(p.toLowerCase());
+                    return (
+                      <li key={i}>
+                        <button
+                          type="button"
+                          className={`op ${used ? "used" : ""}`}
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => selectPoint(p)}
+                          aria-label={used ? fmt(E.outlineGo, { p }) : fmt(E.outlineAdd, { p })}
+                        >
+                          <span className="op-mark" aria-hidden>{used ? "✓" : "+"}</span>
+                          <span>{p}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
             )}
             {sermon.recording_url && (
               <p style={{ margin: "0.6rem 0 0" }}>
@@ -565,6 +666,11 @@ export default function NoteEditor({
       <SermonRecorder
         noteId={note.id}
         notesText={() => (editor ? docText(editor.getJSON() as never) : "")}
+        isBlank={isBlank}
+        outline={() => {
+          const h = headingsInNote();
+          return h.length ? h : outlinePoints;
+        }}
         onAddPoints={addMissedPoints}
         onAutoNotes={addSermonNotes}
         slot={recSlot}

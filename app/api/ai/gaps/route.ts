@@ -29,7 +29,7 @@ export async function POST(request: Request) {
   if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   if (!aiAvailable()) return NextResponse.json({ error: "ai_unavailable" }, { status: 503 });
 
-  const body = (await request.json().catch(() => ({}))) as { noteId?: string; recordingId?: string; mode?: string };
+  const body = (await request.json().catch(() => ({}))) as { noteId?: string; recordingId?: string; mode?: string; outline?: unknown };
   if (!body.noteId || !body.recordingId) return NextResponse.json({ error: "bad_request" }, { status: 400 });
 
   // RLS: both queries only return rows that belong to this member.
@@ -45,6 +45,16 @@ export async function POST(request: Request) {
   const lang = LANGUAGE_NAMES[await getLocale()] ?? "English";
 
   if (body.mode === "notes") {
+    // The pastor's outline (or the headings the member already set up) gives the sections.
+    const outline = (Array.isArray(body.outline) ? body.outline : [])
+      .filter((x): x is string => typeof x === "string" && !!x.trim())
+      .map((x) => x.trim().slice(0, 200))
+      .slice(0, 15);
+    const structure = outline.length
+      ? `Use exactly these section headings, word for word and in this order: ${JSON.stringify(outline)}. ` +
+        "Work out which part of the sermon belongs under each heading and put those points there. " +
+        "If something important fits none of them, add one last section for it. Keep every given heading, even if few points belong to it. "
+      : "Follow the preacher's own structure: 2 to 6 sections with a heading each. ";
     try {
       const ai = await withModel((model) => generateText({
         model,
@@ -52,9 +62,11 @@ export async function POST(request: Request) {
         temperature: 0.2,
         system:
           "You turn a sermon transcript into clear sermon notes for a church member who could not write any. " +
-          "Follow the preacher's own structure: a short title, then 2 to 6 sections with a heading each, and 1 to 5 short points per section. " +
+          "Give a short title. " +
+          structure +
+          "Each section has 1 to 5 short points. " +
           "Stay faithful to what the preacher said; do not add your own teaching, opinions or applications. " +
-          "If the preacher referred to Bible passages, give only the references (for example \"John 3:16\") on the point they belong to, exactly as said; never quote verse text. " +
+          "List every Bible passage the preacher read or mentioned as a reference (for example \"John 3:16\" or \"Psalm 23:1-4\") on the point where it came up; include chapter and verse when they were said. Never quote verse text. " +
           `Write everything in ${lang}. Reply with JSON only: {"title":"...","sections":[{"heading":"...","points":[{"text":"...","refs":["..."]}]}]}.`,
         prompt: `SERMON TITLE (may be empty): ${note.title ?? ""}\n\nTRANSCRIPT:\n${transcript.slice(0, 120000)}`,
       }));
@@ -62,7 +74,7 @@ export async function POST(request: Request) {
       const parsed = JSON.parse(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)) as { title?: string; sections?: Section[] };
       const sections = (Array.isArray(parsed.sections) ? parsed.sections : [])
         .filter((x) => x && typeof x.heading === "string")
-        .slice(0, 6)
+        .slice(0, 16)
         .map((x) => ({ heading: x.heading.trim().slice(0, 160), points: cleanPoints(x.points, 5) }))
         .filter((x) => x.points.length);
       const title = typeof parsed.title === "string" ? parsed.title.trim().slice(0, 160) : "";
