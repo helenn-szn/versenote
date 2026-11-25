@@ -5,7 +5,7 @@ import type { LanguageModel } from "ai";
 // 1. GOOGLE_GENERATIVE_AI_API_KEY: a free Gemini key from Google AI Studio (no card needed).
 // 2. Otherwise the Vercel AI Gateway (needs a card on the Vercel account; free monthly credits).
 // Google retires model names over time, so we try a short list and use the first one that exists.
-const GEMINI_MODELS = [process.env.VERSENOTE_GEMINI_MODEL, "gemini-3.8-flash", "gemini-flash-latest", "gemini-3.7-flash", "gemini-3.5-flash-lite"].filter(Boolean) as string[];
+const GEMINI_MODELS = [process.env.VERSENOTE_GEMINI_MODEL, "gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.7-flash", "gemini-flash-latest", "gemini-3.1-flash-lite"].filter(Boolean) as string[];
 const GATEWAY_MODELS = [process.env.VERSENOTE_AI_MODEL, "google/gemini-3.8-flash", "google/gemini-3.7-flash"].filter(Boolean) as string[];
 
 function candidates(): { model: LanguageModel; name: string }[] {
@@ -19,9 +19,11 @@ function candidates(): { model: LanguageModel; name: string }[] {
 
 let working: number | null = null; // remembered per server instance
 
+// Worth trying another model: this one is gone, busy or over its free quota.
 function isModelGone(e: unknown): boolean {
-  const s = String((e as { message?: string })?.message ?? e) + String((e as { responseBody?: string })?.responseBody ?? "");
-  return /no longer available|not found|NOT_FOUND|is not supported|404/i.test(s);
+  const err = e as { message?: string; responseBody?: string; lastError?: { message?: string; statusCode?: number }; statusCode?: number };
+  const s = [err?.message, err?.responseBody, err?.lastError?.message, err?.statusCode, err?.lastError?.statusCode].join(" ");
+  return /no longer available|not found|NOT_FOUND|is not supported|high demand|overloaded|UNAVAILABLE|RESOURCE_EXHAUSTED|quota|rate limit|\b(404|429|500|503)\b/i.test(s);
 }
 
 /** Run an AI call, moving on to the next model name if Google says one is gone. */

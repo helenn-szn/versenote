@@ -28,6 +28,7 @@ export async function POST(request: Request) {
   try {
     const ai = await withModel((model) => generateText({
       model,
+      maxRetries: 1,
       temperature: 0,
       system:
         "You transcribe church sermons. Write down exactly what is said, in the language it is spoken. " +

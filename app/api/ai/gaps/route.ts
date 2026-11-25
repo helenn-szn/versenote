@@ -39,6 +39,7 @@ export async function POST(request: Request) {
   try {
     const ai = await withModel((model) => generateText({
       model,
+      maxRetries: 1,
       temperature: 0.2,
       system:
         "You help a church member complete their sermon notes. Compare the member's notes with the sermon transcript. " +
