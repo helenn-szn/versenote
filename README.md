@@ -10,12 +10,13 @@ Live: https://versenote.vercel.app · For pastors: https://versenote.vercel.app/
 **For members**
 - **Verses as you type.** Write `Gen 1:1`, `Romans chapter 8 verse 28`, `Jean 3:16`, `요 3:16` or `约翰福音3:16` and the exact verse appears. Press Tab to insert it where you are writing, and the next line starts a new paragraph.
 - **A real notebook.** Headings, bold, italic, highlight, lists and quotes, from a floating toolbar with large touch targets. Everything saves as you type.
-- **Record the sermon.** Record in the app or upload audio or video. AI writes the transcript a minute at a time. If you wrote nothing, it fills the note in for you. If you did write, "What did I miss?" suggests the points you left out.
+- **Follow the outline.** When the church shares a sermon, the pastor's outline points appear above the note. Tap a point and it becomes a subheading to write under. Points stay in the pastor's order however you tap them, or "Add all points" sets them all up at once.
+- **Record the sermon.** Record in the app or upload audio or video. AI writes the transcript a minute at a time. Then it works out which part of the sermon belongs to each outline point and adds it there as plain bullet notes, written the way a person takes notes. Every verse mentioned appears under the point where it came up, looked up from the Bible. If you wrote nothing, it writes the whole note. "What did I miss?" lets you pick what to add.
 - **Jot questions.** The **?** button keeps questions out of your notes until you send them to the preacher, named or anonymously.
 - **Translate and share.** Make a translated copy of any note, share a read-only link, or send it as text.
 
 **For pastors**
-- Add the title, outline and scriptures, then show one QR code. Members get everything in their notebook before you read it.
+- Add the title, outline (as bullet points) and scriptures, then show one QR code. Members get everything in their notebook before you read it.
 - See how many people joined, read the questions people send you, and answer one person or publish an answer for everyone.
 - Pastors never see anyone's notes, recordings or transcripts, or who asked an anonymous question.
 
@@ -87,6 +88,7 @@ Import the GitHub repo, add the environment variables and deploy. Then add the V
 | `app/notes/[id]` + `components/NoteEditor.tsx` | The notebook: rich text, verse detection, floating toolbar, autosave |
 | `components/editor/ScriptureNode.tsx` | Scripture cards inside the note |
 | `components/SermonRecorder.tsx` + `lib/audio.ts` | Recording, upload, live transcript, "What did I miss?", notes from a recording |
+| `components/OutlineEditor.tsx` + `lib/outline.ts` | Pastors' bulleted outline; reading the outline for members |
 | `components/NoteSheets.tsx` | Share, translate and "My questions" sheets |
 | `components/AskPreacher.tsx` | Members' questions and answers for a church sermon |
 | `app/pastor` + `components/SermonManager.tsx` | Pastors create sermons, add scriptures, get the link and QR code, answer questions |
@@ -95,7 +97,7 @@ Import the GitHub repo, add the environment variables and deploy. Then add the V
 | `app/account` | Name, Bible, download my data, delete account |
 | `app/api/verse` | Verse lookup (signed-in only) |
 | `app/api/ai/transcribe` | One short piece of audio to text |
-| `app/api/ai/gaps` | Missed points, or full notes for an empty note |
+| `app/api/ai/gaps` | Sorts the sermon under each outline point: missed points for a note in progress, or full notes for an empty one |
 | `app/api/ai/translate` | Translated copy of a note, with verses taken from the new language's Bible |
 | `lib/bible/` | Reference parser (abbreviations, numbered books, spoken numbers, all 7 languages), book names, translations, fetch |
 | `lib/i18n/` | Dictionaries for the 7 languages, language switcher logic, showcase verses |
@@ -105,7 +107,8 @@ Import the GitHub repo, add the environment variables and deploy. Then add the V
 ## Responsible AI and privacy
 
 - **Scripture is never generated.** Verses come from a Bible text and are labelled with their translation. When AI mentions a verse, the app looks up the real text. When a note is translated, verses are fetched again from that language's Bible.
-- **AI output is labelled.** Transcripts, notes written from a recording and missed points are clearly marked as AI. The member chooses what to add.
+- **AI stays faithful to the sermon.** It writes only what was preached, with no teaching, opinions or summaries of its own. Transcripts are labelled as AI and kept next to the note so anything added can be checked. A note written entirely from a recording says so in its first line.
+- **The member decides.** AI notes are added only from a recording the member chose to make, and "What did I miss?" shows each point before it is added.
 - **Private by default.** Row-level security means each user can only read their own notes, recordings and transcripts, even if the app code has a bug. Recordings sit in a private storage bucket under the owner's folder.
 - **Anonymous means anonymous.** Who asked a question is stored in a table only the asker can read.
 - **Sharing is opt-in.** A shared note shows only the note: no name, questions or recordings. Turning the link off stops it working.
