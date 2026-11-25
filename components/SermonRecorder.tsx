@@ -70,8 +70,8 @@ export default function SermonRecorder({
   const fail = (id: string, msg: string) => setErrors((e) => ({ ...e, [id]: msg }));
 
   // ---------- Transcription ----------
-  async function transcribePiece(wav: Blob): Promise<string> {
-    const res = await fetch(`/api/ai/transcribe?lang=${locale}`, { method: "POST", body: wav, headers: { "Content-Type": "audio/wav" } });
+  async function transcribePiece(audio: Blob): Promise<string> {
+    const res = await fetch(`/api/ai/transcribe?lang=${locale}`, { method: "POST", body: audio, headers: { "Content-Type": audio.type || "audio/wav" } });
     const body = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(body.error === "ai_unavailable" ? R.aiOff : R.aiFail);
     return (body.text as string) ?? "";
@@ -203,6 +203,15 @@ export default function SermonRecorder({
         if (data) file = data;
       }
       if (!file) throw new Error(R.noFile);
+      // Short files go to the AI whole: no decoding needed in the browser.
+      if (file.size <= 3.5 * 1024 * 1024) {
+        setStatus(id, fmt(R.transcribing, { done: 0, total: 1 }));
+        const type = (file.type || rec?.mime_type || "audio/webm").split(";")[0];
+        const text = await transcribePiece(new Blob([file], { type }));
+        await saveTranscript(id, text);
+        clearStatus(id);
+        return;
+      }
       setStatus(id, R.preparing);
       let chunks: Blob[];
       let duration: number;

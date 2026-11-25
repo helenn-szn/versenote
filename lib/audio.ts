@@ -81,6 +81,7 @@ export class SermonRecording {
   private proc: ScriptProcessorNode | null = null;
   private rec: MediaRecorder | null = null;
   private parts: Blob[] = [];
+  private extra: MediaStream | null = null;
   private pcm: Float32Array[] = [];
   private pcmLen = 0;
   private started = 0;
@@ -94,7 +95,8 @@ export class SermonRecording {
 
   async start() {
     this.stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-    const types = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg;codecs=opus"];
+    // MP4/AAC first: it plays on iPhones as well as everywhere else. WebM is the fallback.
+    const types = ["audio/mp4;codecs=mp4a.40.2", "audio/mp4", "audio/webm;codecs=opus", "audio/webm", "audio/ogg;codecs=opus"];
     this.mimeType = types.find((t) => typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported(t)) ?? "";
     this.rec = new MediaRecorder(this.stream, { ...(this.mimeType ? { mimeType: this.mimeType } : {}), audioBitsPerSecond: 32000 });
     this.rec.ondataavailable = (e) => e.data.size && this.parts.push(e.data);
@@ -102,7 +104,12 @@ export class SermonRecording {
 
     const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     this.ctx = new Ctx();
-    const src = this.ctx.createMediaStreamSource(this.stream);
+    if (this.ctx.state === "suspended") await this.ctx.resume().catch(() => {});
+    // iPhones can silence the recording if the recorder and the audio analyser share one microphone track,
+    // so the analyser listens to a copy.
+    const copy = new MediaStream(this.stream.getAudioTracks().map((t) => t.clone()));
+    this.extra = copy;
+    const src = this.ctx.createMediaStreamSource(copy);
     this.proc = this.ctx.createScriptProcessor(4096, 1, 1);
     const rate = this.ctx.sampleRate;
     this.proc.onaudioprocess = (e) => {
@@ -161,6 +168,7 @@ export class SermonRecording {
     this.proc?.disconnect();
     await this.ctx?.close().catch(() => {});
     this.stream?.getTracks().forEach((t) => t.stop());
+    this.extra?.getTracks().forEach((t) => t.stop());
     return { file: new Blob(this.parts, { type: this.mimeType || "audio/webm" }), duration };
   }
 }

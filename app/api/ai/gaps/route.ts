@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { generateText } from "ai";
 import { createClient } from "@/lib/supabase/server";
-import { aiAvailable, aiModel, isSetupError, LANGUAGE_NAMES } from "@/lib/ai";
+import { aiAvailable, isSetupError, LANGUAGE_NAMES, withModel } from "@/lib/ai";
 import { contentToDoc, docText } from "@/lib/notes/doc";
 import { getLocale } from "@/lib/i18n/server";
 import type { NoteContent } from "@/lib/types";
@@ -37,9 +37,8 @@ export async function POST(request: Request) {
   const lang = LANGUAGE_NAMES[await getLocale()] ?? "English";
 
   try {
-    const ai = aiModel();
-    const { text } = await generateText({
-      model: ai.model,
+    const ai = await withModel((model) => generateText({
+      model,
       temperature: 0.2,
       system:
         "You help a church member complete their sermon notes. Compare the member's notes with the sermon transcript. " +
@@ -48,7 +47,8 @@ export async function POST(request: Request) {
         "If the preacher referred to Bible passages for a point, give only the references (for example \"John 3:16\"), exactly as said; never quote verse text. " +
         `Write the points in ${lang}. Reply with JSON only: {"points":[{"text":"...","refs":["..."]}]}. At most 8 points. If nothing important is missing, reply {"points":[]}.`,
       prompt: `SERMON TITLE: ${note.title ?? ""}\n\nMEMBER'S NOTES:\n${notes || "(empty)"}\n\nTRANSCRIPT:\n${transcript.slice(0, 120000)}`,
-    });
+    }));
+    const text = ai.result.text;
     const json = text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1);
     const parsed = JSON.parse(json) as { points?: Point[] };
     const points = (parsed.points ?? [])
