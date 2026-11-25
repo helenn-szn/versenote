@@ -1,3 +1,5 @@
+import { contentToDoc, docText } from "./notes/doc";
+
 export type Verse = { verse: number; text: string };
 
 export type TextBlock = { id: string; type: "text"; text: string };
@@ -10,11 +12,12 @@ export type ScriptureBlock = {
 };
 export type Block = TextBlock | ScriptureBlock;
 
-// Stored in notes.content (jsonb)
+// Stored in notes.content (jsonb). Version 2 holds a rich-text doc; version 1 (older notes) holds blocks.
 export type NoteContent = {
-  version: 1;
+  version: 1 | 2;
   sermon_slug?: string;
-  blocks: Block[];
+  doc?: import("./notes/doc").Doc;
+  blocks?: Block[];
 };
 
 export type Note = {
@@ -45,7 +48,7 @@ export type SharedSermon = {
 export const newId = () => Math.random().toString(36).slice(2, 10);
 
 export function emptyContent(slug?: string): NoteContent {
-  return { version: 1, ...(slug ? { sermon_slug: slug } : {}), blocks: [{ id: newId(), type: "text", text: "" }] };
+  return { version: 2, ...(slug ? { sermon_slug: slug } : {}), doc: { type: "doc", content: [{ type: "paragraph" }] } };
 }
 
 // Shared scriptures store their verses as JSON in verse_text; fall back to plain text.
@@ -58,7 +61,5 @@ export function sharedVerses(s: SharedScripture): Verse[] {
 }
 
 export function noteText(content: NoteContent): string {
-  return content.blocks
-    .map((b) => (b.type === "text" ? b.text : `${b.reference} ${b.verses.map((v) => v.text).join(" ")}`))
-    .join("\n");
+  return docText(contentToDoc(content));
 }

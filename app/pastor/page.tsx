@@ -2,6 +2,8 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/format";
 import SermonCover from "@/components/SermonCover";
+import { getI18n } from "@/lib/i18n/server";
+import { fmt } from "@/lib/i18n/config";
 
 type Row = {
   id: string;
@@ -14,6 +16,8 @@ type Row = {
 
 export default async function PastorPage() {
   const supabase = await createClient();
+  const { locale, t } = await getI18n();
+  const P = t.pastor;
   const { data } = await supabase
     .from("sermons")
     .select("id, title, sermon_date, is_active, sermon_join_counts(joins), sermon_questions(count)")
@@ -22,20 +26,17 @@ export default async function PastorPage() {
 
   return (
     <div>
-      <p className="eyebrow brown">For pastors and preachers</p>
-      <h1>Share a sermon</h1>
-      <p className="meta">
-        Add your title, outline and scriptures, then show the QR code before the service. Members get the scriptures
-        in their notebook, and can ask you questions afterwards. You never see their notes.
-      </p>
+      <p className="eyebrow brown">{P.eyebrow}</p>
+      <h1>{P.title}</h1>
+<p className="meta">{P.lead}</p>
 
       <form action="/pastor/new" method="post" className="card row">
-        <input className="input" style={{ flex: 1, minWidth: 200 }} name="title" required maxLength={200} placeholder="Sermon title" aria-label="Sermon title" />
-        <button className="btn">Create</button>
+        <input className="input" style={{ flex: 1, minWidth: 200 }} name="title" required maxLength={200} placeholder={P.titlePh} aria-label={P.titlePh} />
+        <button className="btn">{P.create}</button>
       </form>
 
       {sermons.length === 0 ? (
-        <p className="notice">Your shared sermons will appear here.</p>
+        <p className="notice">{P.empty}</p>
       ) : (
         <div className="list">
           {sermons.map((s) => {
@@ -49,10 +50,10 @@ export default async function PastorPage() {
                 <div className="body">
                 <div className="row" style={{ justifyContent: "space-between" }}>
                   <strong>{s.title}</strong>
-                  <span className={`badge ${s.is_active ? "" : "grey"}`}>{s.is_active ? "Link on" : "Link off"}</span>
+                  <span className={`badge ${s.is_active ? "" : "grey"}`}>{s.is_active ? P.linkOn : P.linkOff}</span>
                 </div>
                 <div className="meta">
-                  {[formatDate(s.sermon_date), `${jc?.joins ?? 0} joined`, `${questions} question${questions === 1 ? "" : "s"}`]
+                  {[formatDate(s.sermon_date, locale), fmt(P.joined, { n: jc?.joins ?? 0 }), questions === 1 ? P.questionOne : fmt(P.questionMany, { n: questions })]
                     .filter(Boolean)
                     .join(" · ")}
                 </div>

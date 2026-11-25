@@ -4,6 +4,9 @@ import { useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { safeNext } from "@/lib/safe-next";
+import { useI18n } from "@/lib/i18n/client";
+import { fmt } from "@/lib/i18n/config";
+import type { Dict } from "@/lib/i18n/dict/en";
 
 // Google appears only once it's set up in Supabase (Authentication → Providers → Google)
 // and NEXT_PUBLIC_ENABLE_GOOGLE=true is set in Vercel.
@@ -12,6 +15,8 @@ const GOOGLE_ENABLED = process.env.NEXT_PUBLIC_ENABLE_GOOGLE === "true";
 type Mode = "signin" | "signup" | "link";
 
 export default function LoginForm() {
+  const { t } = useI18n();
+  const L = t.login;
   const params = useSearchParams();
   const router = useRouter();
   const next = safeNext(params.get("next"));
@@ -24,7 +29,7 @@ export default function LoginForm() {
   const [busy, setBusy] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(
-    params.get("error") === "link" ? "That sign-in link has expired. Please try again." : null
+    params.get("error") === "link" ? L.errLink : null
   );
 
   const callback = () => `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`;
@@ -38,8 +43,8 @@ export default function LoginForm() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
-    if (!email.trim()) return setError("Enter your email address.");
-    if (mode !== "link" && password.length < 8) return setError("Use a password of at least 8 characters.");
+    if (!email.trim()) return setError(L.errEmail);
+    if (mode !== "link" && password.length < 8) return setError(L.errPassword);
     setBusy(true);
 
     if (mode === "link") {
@@ -48,7 +53,7 @@ export default function LoginForm() {
         options: { emailRedirectTo: callback(), shouldCreateUser: true },
       });
       setBusy(false);
-      if (error) return setError(friendly(error.message));
+      if (error) return setError(friendly(error.message, L));
       return setSent(true);
     }
 
@@ -59,7 +64,7 @@ export default function LoginForm() {
         options: { emailRedirectTo: callback() },
       });
       setBusy(false);
-      if (error) return setError(friendly(error.message));
+      if (error) return setError(friendly(error.message, L));
       if (!data.session) return setSent(true); // email confirmation is switched on in Supabase
       router.push(next);
       router.refresh();
@@ -68,7 +73,7 @@ export default function LoginForm() {
 
     const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
     setBusy(false);
-    if (error) return setError(friendly(error.message));
+    if (error) return setError(friendly(error.message, L));
     router.push(next);
     router.refresh();
   }
@@ -76,17 +81,11 @@ export default function LoginForm() {
   async function google() {
     setError(null);
     const { error } = await supabase.auth.signInWithOAuth({ provider: "google", options: { redirectTo: callback() } });
-    if (error) setError(friendly(error.message));
+    if (error) setError(friendly(error.message, L));
   }
 
-  const title = joining ? "Join the sermon" : mode === "signup" ? "Create your notebook" : mode === "link" ? "Get a sign-in link" : "Welcome back";
-  const subtitle = joining
-    ? "Create a free account and this week's scriptures will be waiting in your notebook."
-    : mode === "signup"
-      ? "Free for members and churches. It takes less than a minute."
-      : mode === "link"
-        ? "We'll email you a link. No password needed."
-        : "Sign in to pick up where you left off.";
+  const title = joining ? L.titleJoin : mode === "signup" ? L.titleSignup : mode === "link" ? L.titleLink : L.titleSignin;
+  const subtitle = joining ? L.subJoin : mode === "signup" ? L.subSignup : mode === "link" ? L.subLink : L.subSignin;
 
   return (
     <div className="auth-card">
@@ -94,30 +93,28 @@ export default function LoginForm() {
       <p className="auth-sub">{subtitle}</p>
 
       {mode !== "link" && (
-        <div className="seg" role="tablist" aria-label="Sign in or create account">
+        <div className="seg" role="tablist" aria-label={L.tablist}>
           <button type="button" role="tab" aria-selected={mode === "signin"} className={mode === "signin" ? "on" : ""} onClick={() => switchMode("signin")}>
-            Sign in
+            {L.signIn}
           </button>
           <button type="button" role="tab" aria-selected={mode === "signup"} className={mode === "signup" ? "on" : ""} onClick={() => switchMode("signup")}>
-            Create account
+            {L.createAccount}
           </button>
         </div>
       )}
 
       {sent ? (
         <div className="auth-sent">
-          <strong>Check your email</strong>
-          <p>
-            We sent a link to <b>{email}</b>. Open it on this device to continue.
-          </p>
+          <strong>{L.checkEmail}</strong>
+          <p>{fmt(L.sentTo, { email })}</p>
           <button type="button" className="btn ghost small" onClick={() => switchMode("signin")}>
-            Back to sign in
+            {L.back}
           </button>
         </div>
       ) : (
         <form onSubmit={submit} className="auth-form" noValidate>
           <div>
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">{L.email}</label>
             <input
               id="email"
               className="input"
@@ -134,7 +131,7 @@ export default function LoginForm() {
           </div>
           {mode !== "link" && (
             <div>
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">{L.password}</label>
               <input
                 id="password"
                 className="input"
@@ -145,7 +142,7 @@ export default function LoginForm() {
                   setPassword(e.target.value);
                   setError(null);
                 }}
-                placeholder={mode === "signup" ? "At least 8 characters" : "Your password"}
+                placeholder={mode === "signup" ? L.pwNew : L.pwCurrent}
               />
             </div>
           )}
@@ -155,7 +152,7 @@ export default function LoginForm() {
             </p>
           )}
           <button className="btn block lg" disabled={busy}>
-            {busy ? "Please wait…" : mode === "signup" ? "Create account" : mode === "link" ? "Email me a link" : "Sign in"}
+            {busy ? L.wait : mode === "signup" ? L.createAccount : mode === "link" ? L.emailLink : L.signIn}
           </button>
         </form>
       )}
@@ -164,36 +161,35 @@ export default function LoginForm() {
         <div className="auth-alt">
           {GOOGLE_ENABLED && (
             <button type="button" className="btn secondary block" onClick={google}>
-              <GoogleIcon /> Continue with Google
+              <GoogleIcon /> {L.google}
             </button>
           )}
           {mode === "link" ? (
             <button type="button" className="link-btn" onClick={() => switchMode("signin")}>
-              Use a password instead
+              {L.usePassword}
             </button>
           ) : (
             <button type="button" className="link-btn" onClick={() => switchMode("link")}>
-              Email me a sign-in link instead
+              {L.useLink}
             </button>
           )}
         </div>
       )}
 
       <p className="auth-privacy">
-        <LockIcon /> We only use your email to sign you in. Your notes are private to you, and you can delete your
-        account at any time.
+        <LockIcon /> {L.privacy}
       </p>
     </div>
   );
 }
 
-function friendly(msg: string): string {
+function friendly(msg: string, L: Dict["login"]): string {
   const m = msg.toLowerCase();
-  if (m.includes("invalid login")) return "That email and password don't match. Try again, or create an account.";
-  if (m.includes("already registered")) return "There's already an account with this email. Sign in instead.";
-  if (m.includes("rate limit") || m.includes("too many")) return "Too many emails were sent recently. Use a password instead, or try again in a little while.";
-  if (m.includes("not enabled") || m.includes("provider")) return "That sign-in option isn't available yet.";
-  if (m.includes("email not confirmed")) return "Please confirm your email first. Check your inbox for the link.";
+  if (m.includes("invalid login")) return L.errInvalid;
+  if (m.includes("already registered")) return L.errRegistered;
+  if (m.includes("rate limit") || m.includes("too many")) return L.errRate;
+  if (m.includes("not enabled") || m.includes("provider")) return L.errProvider;
+  if (m.includes("email not confirmed")) return L.errUnconfirmed;
   return msg;
 }
 

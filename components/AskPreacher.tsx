@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { SharedSermon } from "@/lib/types";
+import { useI18n } from "@/lib/i18n/client";
+import { fmt } from "@/lib/i18n/config";
+
 
 type Answer = { body: string; answered_at: string };
 type MyQuestion = {
@@ -18,6 +21,8 @@ type PublicQA = { question: string; answer: string; answered_at: string };
 const firstAnswer = (a: MyQuestion["question_answers"]) => (Array.isArray(a) ? a[0] : a) ?? null;
 
 export default function AskPreacher({ sermon, initialName }: { sermon: SharedSermon; initialName: string }) {
+  const { t } = useI18n();
+  const A = t.ask;
   const supabase = useRef(createClient()).current;
   const [body, setBody] = useState("");
   const [showName, setShowName] = useState(false);
@@ -50,11 +55,11 @@ export default function AskPreacher({ sermon, initialName }: { sermon: SharedSer
     setError("");
     setSent(false);
     if (!body.trim()) {
-      setError("Write your question first.");
+      setError(A.errEmpty);
       return;
     }
     if (showName && !name.trim()) {
-      setError("Enter the name you'd like the preacher to see, or untick the box.");
+      setError(A.errName);
       return;
     }
     setBusy(true);
@@ -66,7 +71,7 @@ export default function AskPreacher({ sermon, initialName }: { sermon: SharedSer
         .eq("id", auth.user!.id);
       if (nameErr) {
         setBusy(false);
-        setError("Couldn't save your name. Try again.");
+        setError(A.errSaveName);
         return;
       }
     }
@@ -88,12 +93,12 @@ export default function AskPreacher({ sermon, initialName }: { sermon: SharedSer
   return (
     <section style={{ marginTop: "2rem" }}>
       <hr className="divider" />
-      <h2>Ask the preacher</h2>
+      <h2>{A.title}</h2>
 
       {sermon.questions_open ? (
         <form onSubmit={ask} className="card stack">
           <div>
-            <label htmlFor="question">Your question about this message</label>
+            <label htmlFor="question">{A.label}</label>
             <textarea
               id="question"
               className="textarea"
@@ -104,12 +109,12 @@ export default function AskPreacher({ sermon, initialName }: { sermon: SharedSer
                 setError("");
                 setSent(false);
               }}
-              placeholder="What would you like to ask?"
+              placeholder={A.placeholder}
             />
           </div>
           <label className="check">
             <input type="checkbox" checked={showName} onChange={(e) => setShowName(e.target.checked)} />
-            Show my name to the preacher
+            {A.showName}
           </label>
           {showName && (
             <input
@@ -117,28 +122,26 @@ export default function AskPreacher({ sermon, initialName }: { sermon: SharedSer
               value={name}
               maxLength={60}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Name to show"
-              aria-label="Name to show"
+              placeholder={A.namePh}
+              aria-label={A.namePh}
             />
           )}
           <p className="notice" style={{ margin: 0 }}>
-            {showName
-              ? "The preacher will see your question and this name."
-              : "Anonymous: the preacher sees only your question, never who asked it."}
+            {showName ? A.namedNotice : A.anonNotice}
           </p>
           <button className="btn" disabled={busy}>
-            {busy ? "Sending…" : "Send question"}
+            {busy ? A.sending : A.send}
           </button>
           {error && <p className="error">{error}</p>}
-          {sent && <p className="notice">Sent. You&rsquo;ll see the answer here.</p>}
+          {sent && <p className="notice">{A.sent}</p>}
         </form>
       ) : (
-        <p className="notice">Questions are closed for this sermon.</p>
+        <p className="notice">{A.closed}</p>
       )}
 
       {mine.length > 0 && (
         <>
-          <h3 style={{ fontSize: "1rem", marginTop: "1.25rem" }}>Your questions</h3>
+          <h3 style={{ fontSize: "1rem", marginTop: "1.25rem" }}>{A.yours}</h3>
           {mine.map((q) => {
             const a = firstAnswer(q.question_answers);
             return (
@@ -146,10 +149,10 @@ export default function AskPreacher({ sermon, initialName }: { sermon: SharedSer
                 <div className="row" style={{ justifyContent: "space-between" }}>
                   <span className="q">{q.body}</span>
                   <span className={`badge ${a ? "" : "grey"}`}>
-                    {a ? "Answered" : q.status === "hidden" ? "Not answered" : "Waiting"}
+                    {a ? A.answered : q.status === "hidden" ? A.notAnswered : A.waiting}
                   </span>
                 </div>
-                <div className="meta">{q.shown_name ? `Asked as ${q.shown_name}` : "Asked anonymously"}</div>
+                <div className="meta">{q.shown_name ? fmt(A.askedAs, { name: q.shown_name }) : A.askedAnon}</div>
                 {a && <div className="a">{a.body}</div>}
               </div>
             );
@@ -159,7 +162,7 @@ export default function AskPreacher({ sermon, initialName }: { sermon: SharedSer
 
       {publicQA.length > 0 && (
         <>
-          <h3 style={{ fontSize: "1rem", marginTop: "1.25rem" }}>Answered for everyone</h3>
+          <h3 style={{ fontSize: "1rem", marginTop: "1.25rem" }}>{A.everyone}</h3>
           {publicQA.map((qa, i) => (
             <div className="qa" key={i}>
               <div className="q">{qa.question}</div>

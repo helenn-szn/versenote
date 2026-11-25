@@ -2,11 +2,16 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { noteText, type Note } from "@/lib/types";
 import { formatDate } from "@/lib/format";
+import { contentToDoc, countScriptures } from "@/lib/notes/doc";
 import SermonCover from "@/components/SermonCover";
+import { getI18n } from "@/lib/i18n/server";
+import { fmt, LOCALE_TAGS } from "@/lib/i18n/config";
 
 export default async function NotesPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
   const { q = "" } = await searchParams;
   const supabase = await createClient();
+  const { locale, t } = await getI18n();
+  const N = t.notes;
   const { data } = await supabase
     .from("notes")
     .select("id, sermon_id, title, preacher_name, sermon_date, content, updated_at")
@@ -24,11 +29,11 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
     <div>
       <div className="page-head">
         <div>
-          <p className="eyebrow" style={{ margin: 0 }}>Your notebook</p>
-          <h1>My notes</h1>
+          <p className="eyebrow" style={{ margin: 0 }}>{N.eyebrow}</p>
+          <h1>{N.title}</h1>
         </div>
         <form action="/notes/new" method="post">
-          <button className="btn">+ New note</button>
+          <button className="btn">{N.newNote}</button>
         </form>
       </div>
 
@@ -37,29 +42,26 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
           className="input"
           name="q"
           defaultValue={q}
-          placeholder="Search by title, preacher, scripture or words"
-          aria-label="Search notes"
+          placeholder={N.search}
+          aria-label={N.searchAria}
         />
       </form>
 
       {notes.length === 0 ? (
         <div className="card tint">
           {needle ? (
-            <p style={{ margin: 0 }}>No notes match &ldquo;{q}&rdquo;.</p>
+            <p style={{ margin: 0 }}>{fmt(N.noMatch, { q })}</p>
           ) : (
             <>
-              <strong>No notes yet.</strong>
-              <p className="meta" style={{ margin: 0 }}>
-                Start a new note, or scan your pastor&rsquo;s QR code to open this week&rsquo;s sermon with the
-                scriptures ready.
-              </p>
+              <strong>{N.emptyTitle}</strong>
+              <p className="meta" style={{ margin: 0 }}>{N.emptyText}</p>
             </>
           )}
         </div>
       ) : (
         <div className="list">
           {notes.map((n) => {
-            const scriptures = n.content.blocks.filter((b) => b.type === "scripture").length;
+            const scriptures = countScriptures(contentToDoc(n.content));
             return (
               <Link key={n.id} href={`/notes/${n.id}`} className="list-item">
                 <div className="thumb">
@@ -67,17 +69,17 @@ export default async function NotesPage({ searchParams }: { searchParams: Promis
                 </div>
                 <div className="body">
                 <div className="row" style={{ justifyContent: "space-between" }}>
-                  <strong>{n.title || "Untitled sermon"}</strong>
-                  {n.sermon_id && <span className="badge">Shared by church</span>}
+                  <strong>{n.title || N.untitled}</strong>
+                  {n.sermon_id && <span className="badge">{N.sharedBadge}</span>}
                 </div>
                 <div className="meta">
                   {[
                     n.preacher_name,
-                    formatDate(n.sermon_date),
-                    scriptures ? `${scriptures} scripture${scriptures > 1 ? "s" : ""}` : null,
+                    formatDate(n.sermon_date, locale),
+                    scriptures ? (scriptures === 1 ? N.scriptureOne : fmt(N.scriptureMany, { n: scriptures })) : null,
                   ]
                     .filter(Boolean)
-                    .join(" · ") || `Edited ${new Date(n.updated_at).toLocaleDateString()}`}
+                    .join(" · ") || fmt(N.edited, { date: new Date(n.updated_at).toLocaleDateString(LOCALE_TAGS[locale]) })}
                 </div>
                 </div>
               </Link>

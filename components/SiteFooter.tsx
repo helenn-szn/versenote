@@ -1,17 +1,24 @@
 import Link from "next/link";
 import { LogoMark } from "./Logo";
 import Skyline from "./Skyline";
+import { getI18n } from "@/lib/i18n/server";
+import { SHOWCASE } from "@/lib/i18n/verses";
 
-export default function SiteFooter({ compact = false }: { compact?: boolean }) {
+export default async function SiteFooter({ compact = false }: { compact?: boolean }) {
+  const { locale, t } = await getI18n();
+  const f = t.footer;
+  const verse = SHOWCASE[locale].ps119;
+  const bible = verse.bible ?? SHOWCASE[locale].bible;
+
   if (compact) {
     return (
       <footer className="footer">
         <div className="wide footer-inner">
           <span>
-            <strong style={{ color: "var(--ink)" }}>VerseNote</strong> · Never miss a word while searching for the Word.
+            <strong style={{ color: "var(--ink)" }}>VerseNote</strong> · {f.tagline}
           </span>
           <span>
-            Scripture: KJV, BSB and WEB (public domain) · <Link href="/credits">Credits</Link>
+            {f.scripture} · <Link href="/credits">{f.credits}</Link>
           </span>
         </div>
       </footer>
@@ -27,43 +34,45 @@ export default function SiteFooter({ compact = false }: { compact?: boolean }) {
       <div className="sf-body">
         <div className="wide sf-grid2">
           <div className="sf-brand">
-            <Link href="/" className="sf-logo" aria-label="VerseNote home">
+            <Link href="/" className="sf-logo" aria-label={t.nav.home}>
               <LogoMark size={40} />
               <span>
                 Verse<span>Note</span>
               </span>
             </Link>
             <blockquote>
-              &ldquo;Thy word is a lamp unto my feet, and a light unto my path.&rdquo;
-              <cite>Psalm 119:105 (KJV)</cite>
+              &ldquo;{verse.text}&rdquo;
+              <cite>
+                {verse.ref} ({bible})
+              </cite>
             </blockquote>
           </div>
 
           <div className="sf-signup">
-            <h3>Start your notebook</h3>
-            <p>Free for members and churches. Your notes stay yours.</p>
+            <h3>{f.startTitle}</h3>
+            <p>{f.startText}</p>
             <form action="/login" method="get" className="sf-form">
               <input type="hidden" name="mode" value="signup" />
               <label htmlFor="footer-email" className="sr-only">
-                Email address
+                {f.email}
               </label>
               <input id="footer-email" name="email" type="email" required placeholder="you@example.com" autoComplete="email" />
-              <button type="submit">Get started</button>
+              <button type="submit">{f.getStarted}</button>
             </form>
           </div>
 
-          <nav className="sf-cols" aria-label="Footer">
+          <nav className="sf-cols" aria-label={f.nav}>
             <div>
-              <h4>Explore</h4>
-              <Link href="/#how">How it works</Link>
-              <Link href="/#pastors">For pastors</Link>
-              <Link href="/#trust">Our promises</Link>
+              <h4>{f.explore}</h4>
+              <Link href="/#how">{f.how}</Link>
+              <Link href="/#pastors">{f.pastors}</Link>
+              <Link href="/#trust">{f.promises}</Link>
             </div>
             <div>
-              <h4>Account</h4>
-              <Link href="/login">Sign in</Link>
-              <Link href="/login?mode=signup">Create account</Link>
-              <Link href="/credits">Credits</Link>
+              <h4>{f.account}</h4>
+              <Link href="/login">{f.signIn}</Link>
+              <Link href="/login?mode=signup">{f.createAccount}</Link>
+              <Link href="/credits">{f.credits}</Link>
             </div>
           </nav>
         </div>
@@ -71,8 +80,10 @@ export default function SiteFooter({ compact = false }: { compact?: boolean }) {
 
       <div className="sf-bar">
         <div className="wide sf-bar-inner">
-          <span>© 2026 VerseNote · Made for churches all over the world</span>
-          <span>Built for the AI for Church Hackathon 2026 · Scripture: KJV, BSB, WEB</span>
+          <span>{f.copyright}</span>
+          <span>
+            {f.built} · {f.scripture}
+          </span>
         </div>
       </div>
     </footer>

@@ -2,8 +2,13 @@ import { Suspense } from "react";
 import LoginForm from "./LoginForm";
 import Photo from "@/components/Photo";
 import { PHOTOS } from "@/lib/photos";
+import { getI18n } from "@/lib/i18n/server";
+import { SHOWCASE } from "@/lib/i18n/verses";
 
-export default function LoginPage() {
+export default async function LoginPage() {
+  const { locale, t } = await getI18n();
+  const v = SHOWCASE[locale];
+  const [before, after = ""] = t.landing.h1.split("{word}");
   return (
     <div className="bleed auth-page">
       <div className="auth-grid">
@@ -18,18 +23,20 @@ export default function LoginPage() {
           <div className="auth-overlay" />
           <div className="auth-float verse">
             <div className="ref">
-              Psalm 119:105 <small>KJV</small>
+              {v.ps119.ref} <small>{v.bible}</small>
             </div>
-            <div className="text">Thy word is a lamp unto my feet, and a light unto my path.</div>
+            <div className="text">{v.ps119.text}</div>
           </div>
           <div className="auth-float chip">
-            <span className="dot" /> 128 joined this Sunday
+            <span className="dot" /> {t.login.panelJoined}
           </div>
           <div className="auth-quote">
             <h2>
-              Never miss a word while searching for the <em>Word.</em>
+              {before}
+              <em>{t.landing.h1Word}</em>
+              {after}
             </h2>
-            <p>Sermon notes with the scripture built in, for churches all over the world.</p>
+            <p>{t.login.panelText}</p>
           </div>
         </aside>
       </div>

@@ -1,3 +1,6 @@
+import { BOOK_NAMES, SHORT_NAMES } from "./bookNames.ts";
+import type { Lang } from "./translations.ts";
+
 // The 66 books, with chapter counts and the ways people write or say them.
 // Aliases are matched after lower-casing and removing spaces and dots.
 export type Book = { name: string; chapters: number; aliases: string[] };
@@ -71,10 +74,29 @@ export const BOOKS: Book[] = [
   { name: "Revelation", chapters: 22, aliases: ["revelations", "rev", "re", "rv", "apocalypse"] },
 ];
 
+// Lower-case, drop accents, spaces and dots: "Ésaïe" -> "esaie", "1 Jean" -> "1jean".
+export function normalizeBookKey(s: string): string {
+  return s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[\s.]/g, "");
+}
+
 const LOOKUP = new Map<string, Book>();
 for (const b of BOOKS) {
-  LOOKUP.set(b.name.toLowerCase().replace(/[\s.]/g, ""), b);
+  LOOKUP.set(normalizeBookKey(b.name), b);
   for (const a of b.aliases) LOOKUP.set(a, b);
+}
+// Names in other languages. English keeps priority where a spelling is shared.
+for (const list of [...Object.values(BOOK_NAMES), ...Object.values(SHORT_NAMES)]) {
+  list?.forEach((name, i) => {
+    const key = normalizeBookKey(name);
+    if (!LOOKUP.has(key)) LOOKUP.set(key, BOOKS[i]);
+  });
+}
+
+/** "John" + "fr" -> "Jean". Falls back to the English name. */
+export function localBookName(englishName: string, lang: Lang): string {
+  if (lang === "en") return englishName;
+  const i = BOOKS.findIndex((b) => b.name === englishName);
+  return (i >= 0 && BOOK_NAMES[lang][i]) || englishName;
 }
 
 const ORDINALS: Record<string, string> = {
@@ -85,7 +107,7 @@ const ORDINALS: Record<string, string> = {
 
 // "1 Cor", "First Corinthians", "II Kings", "Gen." -> Book
 export function findBook(raw: string): Book | undefined {
-  let s = raw.toLowerCase().replace(/\./g, " ").replace(/\s+/g, " ").trim();
+  let s = raw.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\./g, " ").replace(/\s+/g, " ").trim();
   s = s.replace(/^(the )?(book of |gospel of |gospel according to )/, "");
   const plain = LOOKUP.get(s.replace(/\s/g, ""));
   if (plain) return plain; // "Isa" is Isaiah, not "I Sa(muel)"

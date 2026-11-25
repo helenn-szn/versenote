@@ -82,18 +82,23 @@ function build(bookRaw: string, ch: string, v1?: string, v2?: string): Reference
   return { book: book.name, chapter, verseStart, verseEnd };
 }
 
-const BOOK_PART = String.raw`((?:(?:[123]|i{1,3}|first|second|third|1st|2nd|3rd)\s*)?[a-z]+\.?(?:\s+of\s+(?:solomon|songs))?)`;
-const RANGE = String.raw`(?:\s*(?:-|–|—|to|through|thru)\s*(\d+))?`;
+// A book name: an optional number, then one to four words in any script ("Jean", "Mambo ya Walawi", "约翰福音").
+const BOOK_PART = String.raw`((?:(?:[123]|i{1,3}|first|second|third|1st|2nd|3rd)\s*)?\p{L}+\.?(?:\s+\p{L}+\.?){0,3}?)`;
+const CHAPTER_WORD = String.raw`(?:chapter|chapitre|cap[ií]tulo|sura)`;
+const VERSE_WORD = String.raw`(?:verses?|vs?\.?|versets?|vers[ií]culos?|mstari|aya)`;
+const RANGE = String.raw`(?:\s*(?:-|–|—|~|to|through|thru|à|a|hasta|até|hadi)\s*(\d+))?`;
 
 // Forms like "Gen 1:1", "John 3:16-18", "Romans 8 28", "Rom 8v28"
-const NUMERIC = new RegExp(String.raw`^${BOOK_PART}\s*(\d+)\s*(?::|v|\s|\.)\s*(\d+)${RANGE}$`, "i");
+const NUMERIC = new RegExp(String.raw`^${BOOK_PART}\s*(\d+)\s*(?::|：|v|\s|\.|,)\s*(\d+)${RANGE}$`, "iu");
+// Korean and Chinese: "요한복음 3장 16절", "约翰福音3章16节"
+const CJK = new RegExp(String.raw`^${BOOK_PART}\s*(\d+)\s*[章장]\s*(\d+)\s*[节節절]?${RANGE}\s*[节節절]?$`, "iu");
 // "Romans chapter 8 verse 28", "Romans 8 verse 28 to 30"
 const SPOKEN = new RegExp(
-  String.raw`^${BOOK_PART}\s+(?:chapter\s+)?(\d+)\s*,?\s*(?:verses?|vs?\.?)\s+(\d+)${RANGE}$`,
-  "i"
+  String.raw`^${BOOK_PART}\s+(?:${CHAPTER_WORD}\s+)?(\d+)\s*,?\s*${VERSE_WORD}\s+(\d+)${RANGE}$`,
+  "iu"
 );
 // "Psalm 23", "Psalm chapter 23"
-const CHAPTER_ONLY = new RegExp(String.raw`^${BOOK_PART}\s+(?:chapter\s+)?(\d+)$`, "i");
+const CHAPTER_ONLY = new RegExp(String.raw`^${BOOK_PART}\s*(?:${CHAPTER_WORD}\s+)?(\d+)\s*[章장]?$`, "iu");
 
 /** Parse a whole string as a reference. Returns null if it isn't one. */
 export function parseReference(input: string): Reference | null {
@@ -101,6 +106,8 @@ export function parseReference(input: string): Reference | null {
   let m = s.match(SPOKEN);
   if (m) return build(m[1], m[2], m[3], m[4]);
   m = s.match(NUMERIC);
+  if (m) return build(m[1], m[2], m[3], m[4]);
+  m = s.match(CJK);
   if (m) return build(m[1], m[2], m[3], m[4]);
   m = s.match(CHAPTER_ONLY);
   if (m) return build(m[1], m[2]);
@@ -120,14 +127,17 @@ export function findReferenceAtEnd(text: string): { ref: Reference; start: numbe
   let best: { ref: Reference; start: number } | null = null;
   for (let n = 2; n <= Math.min(10, words.length); n++) {
     const tail = words.slice(words.length - n).join("");
-    if (!/[:v]\s*\d|\bverses?\b|\d\s+\d/i.test(tail)) continue;
+    if (!/[:：v章장]\s*\d|\bverses?\b|versets?|vers[ií]culos?|mstari|\d\s+\d/i.test(tail)) continue;
     const ref = parseReference(tail);
     if (ref && ref.verseStart !== undefined) best = { ref, start: trimmed.length - tail.length };
   }
   if (best) return best;
-  // Single token like "Gen1:1"
+  // Single token like "Gen1:1", or Chinese with no spaces: "我们读约翰福音3:16" (try shorter starts)
   const last = words[words.length - 1];
-  const ref = parseReference(last);
-  if (ref && ref.verseStart !== undefined) return { ref, start: trimmed.length - last.length };
+  for (let k = 0; k < Math.min(last.length - 2, 16); k++) {
+    const piece = last.slice(k);
+    const ref = parseReference(piece);
+    if (ref && ref.verseStart !== undefined) return { ref, start: trimmed.length - piece.length };
+  }
   return null;
 }

@@ -60,3 +60,38 @@ test("detects a reference just typed at the end of a note", () => {
   assert.equal(findReferenceAtEnd("We read acts 2"), null); // chapter only: not auto-detected
   assert.equal(findReferenceAtEnd("No verse here"), null);
 });
+
+test("references in other languages", () => {
+  assert.equal(f("Jean 3:16"), "John 3:16");
+  assert.equal(f("Ésaïe 43:19"), "Isaiah 43:19");
+  assert.equal(f("esaie 43:19"), "Isaiah 43:19");
+  assert.equal(f("1 Corinthiens 13:4-7"), "1 Corinthians 13:4-7");
+  assert.equal(f("Jean chapitre 3 verset 16"), "John 3:16");
+  assert.equal(f("Juan 3:16"), "John 3:16");
+  assert.equal(f("Hechos 2:38"), "Acts 2:38");
+  assert.equal(f("Salmos 23:1"), "Psalms 23:1");
+  assert.equal(f("João 3:16"), "John 3:16");
+  assert.equal(f("Romanos 8:28"), "Romans 8:28");
+  assert.equal(f("Yohana 3:16"), "John 3:16");
+  assert.equal(f("Mambo ya Walawi 19:18"), "Leviticus 19:18");
+  assert.equal(f("Kumbukumbu la Torati 6:5"), "Deuteronomy 6:5");
+  assert.equal(f("Zaburi 23"), "Psalms 23");
+  assert.equal(f("요한복음 3:16"), "John 3:16");
+  assert.equal(f("요 3:16"), "John 3:16");
+  assert.equal(f("로마서 8장 28절"), "Romans 8:28");
+  assert.equal(f("约翰福音3:16"), "John 3:16");
+  assert.equal(f("约翰福音 3：16"), "John 3:16");
+  assert.equal(f("罗马书8章28节"), "Romans 8:28");
+  assert.equal(f("诗篇 23"), "Psalms 23");
+});
+
+test("detects references typed in other languages", () => {
+  const a = findReferenceAtEnd("Le pasteur a lu Jean 3:16");
+  assert.equal(a && formatReference(a.ref), "John 3:16");
+  assert.equal(a?.start, "Le pasteur a lu ".length);
+  const b = findReferenceAtEnd("我们今天读约翰福音3:16");
+  assert.equal(b && formatReference(b.ref), "John 3:16");
+  assert.equal(b?.start, "我们今天读".length);
+  const c = findReferenceAtEnd("Mchungaji alisoma Mambo ya Walawi 19:18");
+  assert.equal(c && formatReference(c.ref), "Leviticus 19:18");
+});

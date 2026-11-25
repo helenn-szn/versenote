@@ -4,39 +4,42 @@ import { createClient } from "@/lib/supabase/server";
 import { emptyContent, type SharedSermon } from "@/lib/types";
 import { formatDate } from "@/lib/format";
 import SermonCover from "@/components/SermonCover";
+import { getI18n } from "@/lib/i18n/server";
+import type { Dict } from "@/lib/i18n/dict/en";
 
 // Where the pastor's QR code points. Visitors see a preview and are asked to sign up;
 // signed-in members are taken straight into their notebook for this sermon.
 export default async function SharedSermonPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const supabase = await createClient();
+  const { locale, t } = await getI18n();
+  const S = t.sharePage;
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
   if (!user) {
     const { data: preview } = await supabase.rpc("get_sermon_preview", { p_slug: slug });
-    if (!preview) return <Inactive />;
+    if (!preview) return <Inactive S={S} />;
     const p = preview as { title: string; preacher_name: string | null; sermon_date: string | null };
     return (
       <div style={{ maxWidth: 480, margin: "1rem auto" }} className="center">
         <div style={{ marginBottom: "1.25rem" }}>
           <SermonCover title={p.title} rounded={22} />
         </div>
-        <p className="eyebrow">You&rsquo;re invited to follow along</p>
+        <p className="eyebrow">{S.invited}</p>
         <h1>{p.title}</h1>
         <p className="meta">
-          {[p.preacher_name, formatDate(p.sermon_date)].filter(Boolean).join(" · ")}
+          {[p.preacher_name, formatDate(p.sermon_date, locale)].filter(Boolean).join(" · ")}
         </p>
         <div className="card tint" style={{ textAlign: "left", margin: "1.25rem 0" }}>
-          Create a free account to get this sermon&rsquo;s scriptures in your notebook, take notes and ask the
-          preacher questions afterwards.
+          {S.pitch}
         </div>
         <Link className="btn block" href={`/login?next=${encodeURIComponent(`/s/${slug}`)}`}>
-          Sign up to follow along
+          {S.signUp}
         </Link>
         <p className="notice" style={{ marginTop: "0.75rem" }}>
-          Already have an account? The same button signs you in.
+          {S.already}
         </p>
       </div>
     );
@@ -44,7 +47,7 @@ export default async function SharedSermonPage({ params }: { params: Promise<{ s
 
   const { data } = await supabase.rpc("get_shared_sermon", { p_slug: slug });
   const sermon = data as SharedSermon | null;
-  if (!sermon) return <Inactive />;
+  if (!sermon) return <Inactive S={S} />;
 
   // One notebook per member per sermon: reopen it if it exists.
   const { data: existing } = await supabase
@@ -70,7 +73,7 @@ export default async function SharedSermonPage({ params }: { params: Promise<{ s
   if (error || !created) {
     return (
       <div className="card">
-        <p className="error">We couldn&rsquo;t open your notebook. Please refresh the page.</p>
+        <p className="error">{S.openFail}</p>
       </div>
     );
   }
@@ -78,13 +81,13 @@ export default async function SharedSermonPage({ params }: { params: Promise<{ s
   redirect(`/notes/${created.id}`);
 }
 
-function Inactive() {
+function Inactive({ S }: { S: Dict["sharePage"] }) {
   return (
     <div style={{ maxWidth: 460, margin: "2rem auto" }} className="center">
-      <h1>This link isn&rsquo;t active</h1>
-      <p className="meta">The sermon may have been switched off by the church, or the link is incorrect.</p>
+      <h1>{S.inactiveTitle}</h1>
+      <p className="meta">{S.inactiveText}</p>
       <Link href="/" className="btn secondary">
-        Go to VerseNote
+        {S.goHome}
       </Link>
     </div>
   );

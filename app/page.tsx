@@ -6,43 +6,15 @@ import { PHOTOS, photoUrl } from "@/lib/photos";
 import Photo from "@/components/Photo";
 import ScrollFX from "@/components/ScrollFX";
 import HeroDemo from "@/components/HeroDemo";
+import { getI18n } from "@/lib/i18n/server";
+import { fmt } from "@/lib/i18n/config";
+import { SHOWCASE } from "@/lib/i18n/verses";
 
-const STEPS = [
-  {
-    photo: PHOTOS.phoneWorship,
-    title: "Scan or start a note",
-    text: "Scan your church’s QR code to open this week’s sermon with the outline and scriptures ready. Or start a blank note in a tap.",
-  },
-  {
-    photo: PHOTOS.phoneBible,
-    title: "Type the reference",
-    text: "Write “Gen 1:1” or “Romans chapter eight verse twenty-eight”. The exact verse appears, ready to insert, in the translation you choose.",
-  },
-  {
-    photo: PHOTOS.bibleCoffee,
-    title: "Reflect and ask",
-    text: "Come back to your notes during the week, and send the preacher a question, with your name or anonymously.",
-  },
-];
+const STEP_PHOTOS = [PHOTOS.phoneWorship, PHOTOS.phoneBible, PHOTOS.bibleCoffee];
+const WORLD = [PHOTOS.choir, PHOTOS.worship, PHOTOS.prayerCircle, PHOTOS.homily, PHOTOS.reader, PHOTOS.womenPraying, PHOTOS.phoneBible];
+const TRUST_ICONS = ["book", "eye", "mask", "trash"] as const;
 
-const WORLD = [
-  { photo: PHOTOS.choir, place: "Ibadan, Nigeria" },
-  { photo: PHOTOS.worship, place: "New Zealand" },
-  { photo: PHOTOS.prayerCircle, place: "Bangkok, Thailand" },
-  { photo: PHOTOS.homily, place: "Italy" },
-  { photo: PHOTOS.reader, place: "Port Elizabeth, South Africa" },
-  { photo: PHOTOS.womenPraying, place: "Canada" },
-  { photo: PHOTOS.phoneBible, place: "Argentina" },
-];
-
-const TRUST = [
-  { icon: "book", title: "Scripture is never made up", text: "Every verse comes word for word from the Bible text, labelled with its translation. AI never writes or changes it." },
-  { icon: "eye", title: "Pastors never see your notes", text: "Your notes are private to you, protected in the database itself. Pastors only see how many people joined." },
-  { icon: "mask", title: "Ask anonymously", text: "Anonymous questions never reveal who asked, not even to the preacher. Share your name only if you choose." },
-  { icon: "trash", title: "Leave any time", text: "Download everything you wrote, or delete your account and all of your data in one step." },
-] as const;
-
-function TrustIcon({ name }: { name: (typeof TRUST)[number]["icon"] }) {
+function TrustIcon({ name }: { name: (typeof TRUST_ICONS)[number] }) {
   const common = { width: 26, height: 26, viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: 1.8, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
   switch (name) {
     case "book":
@@ -87,6 +59,10 @@ export default async function Home() {
   } = await supabase.auth.getUser();
   if (user) redirect("/notes");
 
+  const { locale, t } = await getI18n();
+  const L = t.landing;
+  const v = SHOWCASE[locale];
+  const [h1Before, h1After = ""] = L.h1.split("{word}");
   const qr = await QRCode.toString("VerseNote", { type: "svg", margin: 0, color: { dark: "#1c1917", light: "#0000" } });
 
   return (
@@ -97,18 +73,17 @@ export default async function Home() {
         <div className="hero3-bg" aria-hidden />
         <div className="wide hero3-copy">
           <h1>
-            Never miss a word while searching for the <em className="squiggle">Word.</em>
+            {h1Before}
+            <em className="squiggle">{L.h1Word}</em>
+            {h1After}
           </h1>
-          <p className="lead">
-            Take sermon notes and bring in the scripture without leaving the page. When your pastor shares the message,
-            today&rsquo;s verses are already waiting.
-          </p>
+          <p className="lead">{L.lead}</p>
           <div className="row" style={{ justifyContent: "center" }}>
             <Link href="/login?mode=signup" className="btn lg">
-              Start taking notes
+              {L.start}
             </Link>
             <Link href="/login?next=/pastor" className="btn secondary lg">
-              I&rsquo;m a pastor
+              {L.pastor}
             </Link>
           </div>
           <div className="proof" style={{ justifyContent: "center" }}>
@@ -118,7 +93,7 @@ export default async function Home() {
                 <img key={p.id} src={photoUrl(p, 96)} alt="" loading="lazy" />
               ))}
             </div>
-            <span>Made for churches all over the world</span>
+            <span>{L.proof}</span>
           </div>
         </div>
 
@@ -133,13 +108,13 @@ export default async function Home() {
           <div className="stage-chip qr">
             <div className="qr-box-sm" dangerouslySetInnerHTML={{ __html: qr }} />
             <div>
-              <strong>Scan to follow</strong>
-              <span className="meta">128 joined</span>
+              <strong>{L.scan}</strong>
+              <span className="meta">{fmt(L.joined, { n: 128 })}</span>
             </div>
           </div>
           <div className="stage-chip q">
-            <span className="badge">Anonymous</span>
-            <span>What does &ldquo;new&rdquo; mean here?</span>
+            <span className="badge">{L.anonymous}</span>
+            <span>{L.chipQuestion}</span>
           </div>
         </div>
       </section>
@@ -147,16 +122,13 @@ export default async function Home() {
       {/* ---------- How it works ---------- */}
       <section id="how" className="alt">
         <div className="wide">
-          <h2 className="section-title">Stay with the message.</h2>
-          <p className="lead">
-            No more switching between a Bible app and a notes app while the sermon carries on without you. VerseNote
-            keeps up with the verses so you can keep up with the preacher.
-          </p>
+          <h2 className="section-title">{L.howTitle}</h2>
+<p className="lead">{L.howLead}</p>
           <div className="steps">
-            {STEPS.map((s, i) => (
-              <div className="step" key={s.title}>
+            {L.steps.map((s, i) => (
+              <div className="step" key={i}>
                 <div className="step-photo">
-                  <Photo photo={s.photo} width={600} />
+                  <Photo photo={STEP_PHOTOS[i]} width={600} />
                   <span className="num">{i + 1}</span>
                 </div>
                 <h3>{s.title}</h3>
@@ -172,24 +144,21 @@ export default async function Home() {
         <div className="nb-glow" aria-hidden />
         <div className="wide">
           <div className="nb-head">
-            <h2 className="section-title">One notebook for the sermon and the scripture.</h2>
-            <p className="lead">
-              Your notes and the verses live side by side, so you never lose your place. Everything saves as you type,
-              stays private to you, and is easy to find again on Wednesday night.
-            </p>
+            <h2 className="section-title">{L.nbTitle}</h2>
+<p className="lead">{L.nbLead}</p>
           </div>
 
           <div className="nb-grid">
             <div className="nb-col">
               <div className="nb-feat">
                 <span className="nb-ico"><NbIcon name="type" /></span>
-                <h3>Verses as you type</h3>
-                <p>Write Gen 1:1 or say it the way the preacher does. The exact verse appears, ready to insert.</p>
+                <h3>{L.featType}</h3>
+                <p>{L.featTypeText}</p>
               </div>
               <div className="nb-feat">
                 <span className="nb-ico"><NbIcon name="book" /></span>
-                <h3>Your translation</h3>
-                <p>Read in KJV, BSB or WEB. Switch any time and your choice follows you.</p>
+                <h3>{L.featBible}</h3>
+                <p>{L.featBibleText}</p>
               </div>
             </div>
 
@@ -197,27 +166,28 @@ export default async function Home() {
               <div className="phone big">
                 <div className="phone-notch" />
                 <div className="nbp-top">
-                  <span>‹ My notes</span>
-                  <span className="saved">Saved</span>
+                  <span>{L.phoneBack}</span>
+                  <span className="saved">{L.saved}</span>
                 </div>
                 <div className="nbp-cover">
                   <Photo photo={PHOTOS.reader} width={500} />
                 </div>
-                <div className="phone-meta">Shared by your church</div>
-                <div className="phone-title">The Lord Is My Shepherd</div>
+                <div className="phone-meta">{L.sharedByChurch}</div>
+                <div className="phone-title">{L.sampleTitle}</div>
                 <div className="phone-chips">
-                  <span>✓ Psalm 23:1</span>
-                  <span>+ John 10:11</span>
+                  <span>✓ {v.ps231.ref}</span>
+                  <span>+ {L.sampleChip2}</span>
                 </div>
-                <p className="nbp-text">He doesn&rsquo;t just lead; he goes ahead of us.</p>
+                <p className="nbp-text">{L.sampleNote1}</p>
                 <div className="scripture" style={{ margin: "0.5rem 0" }}>
                   <div className="ref">
-                    Psalm 23:1<small>KJV</small>
+                    {v.ps231.ref}
+                    <small>{v.bible}</small>
                   </div>
-                  <div className="text" style={{ fontSize: "0.78rem" }}>The LORD is my shepherd; I shall not want.</div>
+                  <div className="text" style={{ fontSize: "0.78rem" }}>{v.ps231.text}</div>
                 </div>
                 <p className="nbp-text">
-                  Rest is a gift, not a reward<span className="caret" />
+                  {L.sampleNote2}<span className="caret" />
                 </p>
               </div>
             </div>
@@ -225,20 +195,20 @@ export default async function Home() {
             <div className="nb-col">
               <div className="nb-feat">
                 <span className="nb-ico"><NbIcon name="lock" /></span>
-                <h3>Private by design</h3>
-                <p>Only you can read your notes. Not other members, not your pastor.</p>
+                <h3>{L.featPrivate}</h3>
+                <p>{L.featPrivateText}</p>
               </div>
               <div className="nb-feat">
                 <span className="nb-ico"><NbIcon name="search" /></span>
-                <h3>Find it again</h3>
-                <p>Search every sermon you&rsquo;ve saved by title, preacher or scripture.</p>
+                <h3>{L.featFind}</h3>
+                <p>{L.featFindText}</p>
               </div>
             </div>
           </div>
 
           <div className="center" style={{ marginTop: "2.5rem" }}>
             <Link href="/login?mode=signup" className="btn lg light">
-              Create your notebook
+              {L.create}
             </Link>
           </div>
         </div>
@@ -249,18 +219,14 @@ export default async function Home() {
         <div className="pastors-deco" aria-hidden />
         <div className="wide split reverse">
           <div>
-            <h2 className="section-title">Put your message in every hand.</h2>
-            <p className="lead">
-              Add your title, outline and scriptures, then show one QR code on screen or in the bulletin. Members get
-              everything in their notebook before you read it, and can ask you questions afterwards. You see how many
-              joined, never their private notes.
-            </p>
-            <div className="flow" aria-label="Three steps for pastors">
-              <span><b>1</b> Add scriptures</span>
+            <h2 className="section-title">{L.pastorsTitle}</h2>
+<p className="lead">{L.pastorsLead}</p>
+            <div className="flow" aria-label={L.flowAria}>
+              <span><b>1</b> {L.flow1}</span>
               <i aria-hidden />
-              <span><b>2</b> Show the QR</span>
+              <span><b>2</b> {L.flow2}</span>
               <i aria-hidden />
-              <span><b>3</b> Answer questions</span>
+              <span><b>3</b> {L.flow3}</span>
             </div>
             <Link href="/login?next=/pastor" className="btn brown">
               Share a sermon
@@ -271,17 +237,17 @@ export default async function Home() {
             <div className="fc pv-qr">
               <div className="qr-box-sm" dangerouslySetInnerHTML={{ __html: qr }} />
               <div>
-                <strong>Scan to follow</strong>
-                <span className="meta">The Lord Is My Shepherd</span>
+                <strong>{L.scan}</strong>
+                <span className="meta">{L.sampleTitle}</span>
               </div>
             </div>
             <div className="fc pv-joined">
               <span className="big">128</span>
-              <span className="meta">joined this Sunday</span>
+              <span className="meta">{L.joinedSunday}</span>
             </div>
             <div className="fc pv-question">
-              <span className="badge">Anonymous</span>
-              <p>What does &ldquo;my cup runneth over&rdquo; mean for us today?</p>
+              <span className="badge">{L.anonymous}</span>
+              <p>{L.pastorQuestion}</p>
             </div>
           </div>
         </div>
@@ -290,20 +256,17 @@ export default async function Home() {
       {/* ---------- Everywhere (brown) ---------- */}
       <section className="world-sec">
         <div className="wide world-head">
-          <h2 className="section-title">Made for congregations everywhere.</h2>
-          <p className="lead">
-            From choirs in Nigeria to worship nights in New Zealand and prayer circles in Thailand: wherever the Word is
-            preached, VerseNote helps people hold on to it through the week.
-          </p>
+          <h2 className="section-title">{L.worldTitle}</h2>
+<p className="lead">{L.worldLead}</p>
         </div>
-        <div className="marquee" aria-label="Churches around the world">
+        <div className="marquee" aria-label={L.worldAria}>
           <div className="marquee-track">
-            {[...WORLD, ...WORLD].map((w, i) => (
-              <figure className="mq-item" key={`${w.place}-${i}`} aria-hidden={i >= WORLD.length}>
-                <Photo photo={w.photo} width={600} />
+            {[...WORLD, ...WORLD].map((photo, i) => (
+              <figure className="mq-item" key={i} aria-hidden={i >= WORLD.length}>
+                <Photo photo={photo} width={600} />
                 <figcaption>
                   <PinIcon />
-                  {w.place}
+                  {L.places[i % WORLD.length]}
                 </figcaption>
               </figure>
             ))}
@@ -318,20 +281,17 @@ export default async function Home() {
         </div>
         <div className="wide trust-inner">
           <div className="trust-head">
-            <h2 className="section-title">Built to honour Scripture and the people reading it.</h2>
-            <p className="lead">
-              A notebook for something sacred should be trustworthy. These promises are built into how VerseNote works,
-              not just written in a policy.
-            </p>
+            <h2 className="section-title">{L.trustTitle}</h2>
+<p className="lead">{L.trustLead}</p>
           </div>
           <div className="trust-grid">
-            {TRUST.map((t) => (
-              <div className="trust-card" key={t.title}>
+            {L.trust.map((c, i) => (
+              <div className="trust-card" key={i}>
                 <span className="trust-icon" aria-hidden>
-                  <TrustIcon name={t.icon} />
+                  <TrustIcon name={TRUST_ICONS[i]} />
                 </span>
-                <h3>{t.title}</h3>
-                <p>{t.text}</p>
+                <h3>{c.title}</h3>
+                <p>{c.text}</p>
               </div>
             ))}
           </div>
@@ -343,17 +303,14 @@ export default async function Home() {
         <div className="wide">
           <div className="cta-panel">
             <div className="cta-panel-copy">
-              <h2>Bring this Sunday&rsquo;s message home.</h2>
-              <p>
-                Free for members and churches. Set up this week&rsquo;s sermon in minutes, or open your own notebook and
-                carry the Word with you into the week.
-              </p>
+              <h2>{L.ctaTitle}</h2>
+<p>{L.ctaText}</p>
               <div className="row">
                 <Link href="/login?mode=signup" className="btn lg light">
-                  Get started free
+                  {L.ctaStart}
                 </Link>
                 <Link href="/login?next=/pastor" className="btn lg outline-light">
-                  Share a sermon
+                  {L.share}
                 </Link>
               </div>
             </div>
@@ -361,22 +318,22 @@ export default async function Home() {
               <div className="feed-card">
                 <span className="feed-ico coral">✓</span>
                 <div>
-                  <strong>Romans 8:28 inserted</strong>
-                  <span>Ada&rsquo;s notebook · just now</span>
+                  <strong>{fmt(L.feedInserted, { ref: v.rom828.ref })}</strong>
+                  <span>{L.feedInsertedSub}</span>
                 </div>
               </div>
               <div className="feed-card">
                 <span className="feed-ico brown">?</span>
                 <div>
-                  <strong>New anonymous question</strong>
-                  <span>&ldquo;How do I start again after failing?&rdquo;</span>
+                  <strong>{L.feedQuestion}</strong>
+                  <span>{L.feedQuestionSub}</span>
                 </div>
               </div>
               <div className="feed-card">
                 <span className="feed-ico dark">128</span>
                 <div>
-                  <strong>People joined this Sunday</strong>
-                  <span>The Lord Is My Shepherd</span>
+                  <strong>{L.feedJoined}</strong>
+                  <span>{L.sampleTitle}</span>
                 </div>
               </div>
             </div>
