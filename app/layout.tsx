@@ -9,6 +9,7 @@ import MobileMenu from "@/components/MobileMenu";
 import { I18nProvider } from "@/lib/i18n/client";
 import { getI18n } from "@/lib/i18n/server";
 import { LOCALE_TAGS } from "@/lib/i18n/config";
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -79,6 +80,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <main className="container">{children}</main>
         <SiteFooter compact={!!user} />
         </I18nProvider>
+        <Analytics />
       </body>
     </html>
   );
