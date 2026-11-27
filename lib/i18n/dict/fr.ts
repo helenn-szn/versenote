@@ -170,6 +170,8 @@ const fr: Dict = {
     google: "Continuer avec Google",
     usePassword: "Utiliser plutôt un mot de passe",
     useLink: "Recevoir plutôt un lien par e-mail",
+    notMember: "Pas membre ?",
+    joinPastor: "Rejoindre en tant que pasteur",
     privacy: "Votre e-mail sert uniquement à vous connecter. Vos notes vous sont privées, et vous pouvez supprimer votre compte à tout moment.",
     errLink: "Ce lien de connexion a expiré. Veuillez réessayer.",
     errEmail: "Saisissez votre adresse e-mail.",

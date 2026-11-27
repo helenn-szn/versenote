@@ -170,6 +170,8 @@ const en = {
     google: "Continue with Google",
     usePassword: "Use a password instead",
     useLink: "Email me a sign-in link instead",
+    notMember: "Not a member?",
+    joinPastor: "Join as a pastor",
     privacy: "We only use your email to sign you in. Your notes are private to you, and you can delete your account at any time.",
     errLink: "That sign-in link has expired. Please try again.",
     errEmail: "Enter your email address.",

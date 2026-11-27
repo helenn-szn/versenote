@@ -198,6 +198,12 @@ export default function LoginForm() {
         </div>
       )}
 
+      {!pastor && !joining && (
+        <p className="auth-switch">
+          {L.notMember} <a href="/login?next=/pastor&mode=signup">{L.joinPastor}</a>
+        </p>
+      )}
+
       <p className="auth-privacy">
         <LockIcon /> {L.privacy}
       </p>

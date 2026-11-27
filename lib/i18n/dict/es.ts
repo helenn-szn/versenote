@@ -170,6 +170,8 @@ const es: Dict = {
     google: "Continuar con Google",
     usePassword: "Usar una contraseña",
     useLink: "Enviarme un enlace de acceso",
+    notMember: "¿No eres miembro?",
+    joinPastor: "Únete como pastor",
     privacy: "Solo usamos tu correo para que inicies sesión. Tus notas son privadas y puedes eliminar tu cuenta en cualquier momento.",
     errLink: "Ese enlace de acceso ha caducado. Inténtalo de nuevo.",
     errEmail: "Escribe tu correo electrónico.",

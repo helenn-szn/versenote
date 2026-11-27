@@ -170,6 +170,8 @@ const ko: Dict = {
     google: "Google로 계속하기",
     usePassword: "비밀번호로 로그인",
     useLink: "이메일 로그인 링크 받기",
+    notMember: "성도가 아니신가요?",
+    joinPastor: "목회자로 가입하기",
     privacy: "이메일은 로그인에만 사용합니다. 노트는 나만 볼 수 있으며, 언제든 계정을 삭제할 수 있습니다.",
     errLink: "로그인 링크가 만료되었습니다. 다시 시도해 주세요.",
     errEmail: "이메일 주소를 입력하세요.",

@@ -170,6 +170,8 @@ const sw: Dict = {
     google: "Endelea na Google",
     usePassword: "Tumia nenosiri badala yake",
     useLink: "Nitumie kiungo cha kuingia badala yake",
+    notMember: "Si mshiriki?",
+    joinPastor: "Jiunge kama mchungaji",
     privacy: "Tunatumia barua pepe yako kukuingiza tu. Maandishi yako ni ya faragha, na unaweza kufuta akaunti yako wakati wowote.",
     errLink: "Kiungo hicho cha kuingia kimeisha muda. Tafadhali jaribu tena.",
     errEmail: "Andika barua pepe yako.",

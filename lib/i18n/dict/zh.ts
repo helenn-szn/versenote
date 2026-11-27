@@ -170,6 +170,8 @@ const zh: Dict = {
     google: "使用 Google 继续",
     usePassword: "改用密码登录",
     useLink: "改用邮箱登录链接",
+    notMember: "不是会众？",
+    joinPastor: "以牧师身份加入",
     privacy: "你的邮箱只用于登录。笔记只有你能看到，你可以随时删除账户。",
     errLink: "该登录链接已过期，请重试。",
     errEmail: "请输入你的邮箱地址。",

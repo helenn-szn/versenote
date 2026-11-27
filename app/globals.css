@@ -1390,3 +1390,7 @@ body { overflow-x: clip; }
   .nav { overflow: visible; }
 }
 @media (prefers-reduced-motion: reduce) { .menu-panel, .menu-backdrop { animation: none; } .menu-btn span { transition: none; } }
+
+.auth-switch { text-align: center; margin-top: 1.4rem; color: var(--muted); font-size: 0.95rem; }
+.auth-switch a { color: var(--coral-text); font-weight: 600; text-decoration: none; }
+.auth-switch a:hover { text-decoration: underline; }

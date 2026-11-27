@@ -170,6 +170,8 @@ const pt: Dict = {
     google: "Continuar com o Google",
     usePassword: "Usar uma senha",
     useLink: "Receber um link de acesso por e-mail",
+    notMember: "Não é membro?",
+    joinPastor: "Entre como pastor",
     privacy: "Usamos seu e-mail só para você entrar. Suas notas são privadas, e você pode excluir sua conta a qualquer momento.",
     errLink: "Esse link de acesso expirou. Tente novamente.",
     errEmail: "Digite seu e-mail.",
